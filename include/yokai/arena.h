@@ -1,8 +1,3 @@
-#ifndef ARENA_ASSERT
-#include <assert.h>
-#define ARENA_ASSERT assert
-#endif // ARENA_ASSERT
-
 #ifndef YOKAI_ARENA_H
 #define YOKAI_ARENA_H
 
@@ -34,5 +29,13 @@ void* arena_alloc(Arena* arena, size_t size, size_t align);
 char* arena_strdup(Arena* arena, const char* src, size_t len);
 
 void arena_reset(Arena* arena);
+
+static inline size_t is_power_of_two(size_t x) {
+  return x && ((x & (x - 1)) == 0);
+}
+
+static inline size_t align_up(size_t n, size_t align) {
+  return (n + (align - 1)) & ~(align - 1);
+}
 
 #endif // YOKAI_ARENA_H
