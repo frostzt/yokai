@@ -3,7 +3,7 @@
 #include "test.h"
 #include "yokai/arena.h"
 
-TEST(create_destory) {
+TEST(create_destroy) {
   Arena ar = arena_create(1024);
   arena_destroy(&ar);
 }
@@ -58,11 +58,3 @@ TEST(arena_reset) {
 
   arena_destroy(&ar);
 }
-
-TEST_MAIN_BEGIN()
-  RUN_TEST(create_destory);
-  RUN_TEST(arena_alloc_alignment);
-  RUN_TEST(arena_alloc_growth);
-  RUN_TEST(arena_alloc_many);
-  RUN_TEST(arena_reset);
-TEST_MAIN_END()

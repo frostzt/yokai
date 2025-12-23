@@ -19,6 +19,9 @@ endif()
 # -----------------------------
 add_library(yokai_core STATIC
   src/arena.c
+  src/str.c
+  src/token.c
+  src/lexer.c
 )
 
 target_include_directories(yokai_core PUBLIC include)
@@ -33,7 +36,9 @@ target_link_libraries(yokai PRIVATE yokai_core)
 # Test Executable
 # -----------------------------
 add_executable(yokai_test
-    tests/arena_test.c
+  tests/main.c
+  tests/arena_test.c
+  tests/token_test.c
 )
 target_include_directories(yokai_test PRIVATE tests)
 target_link_libraries(yokai_test PRIVATE yokai_core)

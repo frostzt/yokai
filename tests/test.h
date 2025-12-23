@@ -7,7 +7,7 @@
 static int tests_run = 0;
 static int tests_passed = 0;
 
-#define TEST(name) static void test_##name(void)
+#define TEST(name) void test_##name(void)
 
 #define RUN_TEST(name) do { \
     tests_run++; \
