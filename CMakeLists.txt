@@ -22,6 +22,7 @@ add_library(yokai_core STATIC
   src/str.c
   src/token.c
   src/lexer.c
+  src/repl.c
 )
 
 target_include_directories(yokai_core PUBLIC include)

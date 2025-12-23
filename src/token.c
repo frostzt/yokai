@@ -13,6 +13,46 @@ TokenType lookup_ident(StrView ident) {
 
 const char *token_type_name(TokenType t) {
   switch (t) {
+  case TOK_ILLEGAL:
+    return "ILLEGAL";
+  case TOK_EOF:
+    return "EOF";
+  case TOK_IDENT:
+    return "IDENT";
+  case TOK_INT:
+    return "INT";
+  case TOK_EQ:
+    return "==";
+  case TOK_NOT_EQ:
+    return "!=";
+  case TOK_SEMICOLON:
+    return ";";
+  case TOK_COMMA:
+    return ",";
+  case TOK_ASSIGN:
+    return "=";
+  case TOK_PLUS:
+    return "+";
+  case TOK_MINUS:
+    return "-";
+  case TOK_BANG:
+    return "!";
+  case TOK_ASTERISK:
+    return "*";
+  case TOK_SLASH:
+    return "/";
+  case TOK_LT:
+    return "<";
+  case TOK_GT:
+    return ">";
+  case TOK_LPAREN:
+    return "(";
+  case TOK_RPAREN:
+    return ")";
+  case TOK_LBRACE:
+    return "{";
+  case TOK_RBRACE:
+    return "}";
   case TOK_FUNCTION:
     return "fn";
   case TOK_LET:
