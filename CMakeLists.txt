@@ -23,6 +23,7 @@ add_library(yokai_core STATIC
   src/token.c
   src/lexer.c
   src/repl.c
+  src/ast.c
 )
 
 target_include_directories(yokai_core PUBLIC include)
@@ -38,6 +39,7 @@ target_link_libraries(yokai PRIVATE yokai_core)
 # -----------------------------
 add_executable(yokai_test
   tests/main.c
+  tests/ast_test.c
   tests/arena_test.c
   tests/token_test.c
 )
