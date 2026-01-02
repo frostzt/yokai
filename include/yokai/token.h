@@ -10,6 +10,7 @@ typedef enum TokenType {
   // identifiers and literals
   TOK_IDENT,
   TOK_INT,
+  TOK_FLOAT,
 
   // comparision operators
   TOK_EQ,

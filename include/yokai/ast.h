@@ -16,6 +16,7 @@ typedef enum {
 typedef enum {
   EXPR_IDENT,
   EXPR_INT,
+  EXPR_FLOAT,
   EXPR_PREFIX,
   EXPR_INFIX,
 } ExpressionKind;
@@ -67,6 +68,12 @@ typedef struct IntegerLiteral {
   Token token;
   int64_t value;
 } IntegerLiteral;
+
+typedef struct FloatLiteral {
+  Expression base; // EXPR_FLOAT
+  Token token;
+  double value;
+} FloatLiteral;
 
 /* Allocates a new Program using the arena allocator with the provided capcity */
 Program *ast_program_new(Arena *arena, size_t capacity);

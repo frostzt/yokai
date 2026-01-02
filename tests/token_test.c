@@ -12,7 +12,7 @@ typedef struct TestStruct {
 
 TEST(lexer_full_token) {
   const char *input_raw = "let five = 5; \
-                       let ten = 10; \
+                       let ten = 10.9; \
                        \
                        let add = fn(x, y) { \
                          x + y; \
@@ -45,7 +45,7 @@ TEST(lexer_full_token) {
       {.expected_type = TOK_LET, .expected_literal = "let"},
       {.expected_type = TOK_IDENT, .expected_literal = "ten"},
       {.expected_type = TOK_ASSIGN, .expected_literal = "="},
-      {.expected_type = TOK_INT, .expected_literal = "10"},
+      {.expected_type = TOK_FLOAT, .expected_literal = "10.9"},
       {.expected_type = TOK_SEMICOLON, .expected_literal = ";"},
 
       // 3rd line

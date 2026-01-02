@@ -1,3 +1,6 @@
+#include <assert.h>
+#include <stdlib.h>
+
 #include "yokai/lexer.h"
 #include "yokai/str.h"
 #include "yokai/token.h"
@@ -40,14 +43,29 @@ void skip_whitespace(Lexer *lexer) {
   }
 }
 
-StrView read_number(Lexer *lexer) {
+NumberLex read_number(Lexer *lexer) {
+  NumberLex lexed;
+  lexed.is_float = false;
   size_t pos = lexer->position;
-  while (is_digit(lexer->ch)) {
+
+  size_t dot_counter = 0;
+  while (is_digit(lexer->ch) || lexer->ch == '.') {
+    if (dot_counter > 1) {
+      abort();
+    }
+
+    if (lexer->ch == '.') {
+      lexed.is_float = true;
+      dot_counter++;
+    }
+
     read_char(lexer);
   }
 
   StrView result = {.data = lexer->input.data + pos, .len = lexer->position - pos};
-  return result;
+  lexed.number = result;
+
+  return lexed;
 }
 
 StrView read_identifier(Lexer *lexer) {
@@ -160,8 +178,15 @@ Token next_token(Lexer *lexer) {
       token.type = lookup_ident(token.literal);
       return token;
     } else if (is_digit(lexer->ch)) {
-      token.literal = read_number(lexer);
-      token.type = TOK_INT;
+      NumberLex data_read = read_number(lexer);
+      token.literal = data_read.number;
+
+      if (data_read.is_float) {
+        token.type = TOK_FLOAT;
+      } else {
+        token.type = TOK_INT;
+      }
+
       return token;
     } else {
       token = token_make(TOK_ILLEGAL, lexer->input.data + lexer->position, 1);

@@ -21,6 +21,8 @@ const char *token_type_name(TokenType t) {
     return "IDENT";
   case TOK_INT:
     return "INT";
+  case TOK_FLOAT:
+    return "FLOAT";
   case TOK_EQ:
     return "==";
   case TOK_NOT_EQ:

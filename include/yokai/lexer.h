@@ -13,6 +13,11 @@ typedef struct Lexer {
   char ch;
 } Lexer;
 
+typedef struct NumberLex {
+  StrView number;
+  bool is_float;
+} NumberLex;
+
 /* read next character and advance read position */
 void read_char(Lexer *lexer);
 
@@ -23,7 +28,7 @@ char peek_char(Lexer *lexer);
 void skip_whitespace(Lexer *lexer);
 
 /* read the character as number till the end */
-StrView read_number(Lexer *lexer);
+NumberLex read_number(Lexer *lexer);
 
 /* read the character as an identifier till the end */
 StrView read_identifier(Lexer *lexer);

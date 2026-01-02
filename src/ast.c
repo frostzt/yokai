@@ -37,3 +37,11 @@ IntegerLiteral *ast_int_new(Arena *arena, Token token, int64_t value) {
   intLit->value = value;
   return intLit;
 }
+
+FloatLiteral *ast_float_new(Arena *arena, Token token, double value) {
+  FloatLiteral *floatLit = arena_alloc(arena, sizeof(FloatLiteral), alignof(FloatLiteral));
+  floatLit->token = token;
+  floatLit->base.kind = EXPR_FLOAT;
+  floatLit->value = value;
+  return floatLit;
+}
