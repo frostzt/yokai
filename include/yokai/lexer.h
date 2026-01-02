@@ -16,6 +16,7 @@ typedef struct Lexer {
 typedef struct NumberLex {
   StrView number;
   bool is_float;
+  bool is_invalid;
 } NumberLex;
 
 /* read next character and advance read position */

@@ -1,4 +1,3 @@
-#include <assert.h>
 #include <stdlib.h>
 
 #include "yokai/lexer.h"
@@ -50,15 +49,12 @@ NumberLex read_number(Lexer *lexer) {
 
   size_t dot_counter = 0;
   while (is_digit(lexer->ch) || lexer->ch == '.') {
-    if (dot_counter > 1) {
-      abort();
-    }
-
     if (lexer->ch == '.') {
       lexed.is_float = true;
       dot_counter++;
     }
 
+    if (dot_counter > 1) { lexed.is_invalid = true; }
     read_char(lexer);
   }
 
@@ -147,7 +143,7 @@ Token next_token(Lexer *lexer) {
     char nextPeekedChar = peek_char(lexer);
     if (nextPeekedChar == '=') {
       read_char(lexer);
-      token = token_make(TOK_NOT_EQ, lexer->input.data + lexer->position, 1);
+      token = token_make(TOK_NOT_EQ, lexer->input.data + lexer->position, 2);
     } else {
       token = token_make(TOK_BANG, lexer->input.data + lexer->position, 1);
     }
@@ -159,7 +155,7 @@ Token next_token(Lexer *lexer) {
     char nextPeekedChar = peek_char(lexer);
     if (nextPeekedChar == '=') {
       read_char(lexer);
-      token = token_make(TOK_EQ, lexer->input.data + lexer->position, 1);
+      token = token_make(TOK_EQ, lexer->input.data + lexer->position, 2);
     } else {
       token = token_make(TOK_ASSIGN, lexer->input.data + lexer->position, 1);
     }
@@ -183,6 +179,8 @@ Token next_token(Lexer *lexer) {
 
       if (data_read.is_float) {
         token.type = TOK_FLOAT;
+      } else if (data_read.is_invalid) {
+        token.type = TOK_ILLEGAL;
       } else {
         token.type = TOK_INT;
       }
