@@ -4,6 +4,25 @@
 #include "yokai/arena.h"
 #include "yokai/ast.h"
 
+const char *stmt_token_literal(const Statement *s) {
+  switch (s->kind) {
+  case STMT_LET: {
+    const LetStatement *ls = (const LetStatement *)s;
+    return ls->token.literal.data;
+  }
+  case STMT_RETURN: {
+    const ReturnStatement *rs = (const ReturnStatement *)s;
+    return rs->token.literal.data;
+  }
+  case STMT_EXPR: {
+    const ExpressionStatement *es = (const ExpressionStatement *)s;
+    return es->token.literal.data;
+  }
+  }
+
+  return NULL;
+}
+
 Program *ast_program_new(Arena *arena, size_t capacity) {
   Program *prog = arena_alloc(arena, sizeof(Program), alignof(Program));
   prog->stmt_count = 0;

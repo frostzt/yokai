@@ -75,6 +75,8 @@ typedef struct FloatLiteral {
   double value;
 } FloatLiteral;
 
+const char* stmt_token_literal(const Statement* s);
+
 /* Allocates a new Program using the arena allocator with the provided capcity */
 Program *ast_program_new(Arena *arena, size_t capacity);
 
