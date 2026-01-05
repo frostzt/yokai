@@ -26,7 +26,7 @@ bool test_let_statement(Statement *stmt, char *name) {
 }
 
 TEST(parser_parses_let_statement) {
-  Arena ar = arena_create(512);
+  Arena arena = arena_create(512);
 
   const char *input_raw = "let x = 5; \
                            let y = 10; \
@@ -39,8 +39,8 @@ TEST(parser_parses_let_statement) {
   read_char(&lexer);
   /* create a new parser, this internally skips two tokens */
   Parser parser = {.lexer = &lexer};
-  parser_init(&parser, &lexer);
-  Program *program = parse_program(&parser, &ar);
+  parser_init(&parser, &lexer, &arena);
+  Program *program = parse_program(&parser, &arena);
   ASSERT_NOT_NULL(program, "parse_program returned NULL");
   ASSERT_EQ(program->stmt_count, 3, "program statements do not contain 3 statements");
 

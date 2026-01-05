@@ -1,3 +1,10 @@
+/*
+ * arena.h - Arena Allocator
+ *
+ * Author: frostzt
+ * Date: 2026-01-05
+ */
+
 #ifndef YOKAI_ARENA_H
 #define YOKAI_ARENA_H
 
