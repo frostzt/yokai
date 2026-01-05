@@ -24,6 +24,7 @@ add_library(yokai_core STATIC
   src/lexer.c
   src/repl.c
   src/ast.c
+  src/parser.c
 )
 
 target_include_directories(yokai_core PUBLIC include)
@@ -38,9 +39,10 @@ target_link_libraries(yokai PRIVATE yokai_core)
 # Test Executable
 # -----------------------------
 add_executable(yokai_test
-  tests/main.c
-  tests/ast_test.c
   tests/arena_test.c
+  tests/ast_test.c
+  tests/main.c
+  tests/parser_test.c
   tests/token_test.c
 )
 target_include_directories(yokai_test PRIVATE tests)

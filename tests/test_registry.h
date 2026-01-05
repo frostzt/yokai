@@ -9,6 +9,7 @@
   X(arena_alloc_growth)                                                                            \
   X(arena_reset)                                                                                   \
   X(lexer_full_token)                                                                              \
-  X(ast_simple_stmt)
+  X(ast_simple_stmt)                                                                               \
+  X(parser_parses_let_statement)
 
 #endif // YOKAI_TEST_REGISTRY_H
