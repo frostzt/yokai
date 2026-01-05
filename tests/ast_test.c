@@ -33,13 +33,13 @@ TEST(ast_simple_stmt) {
   prog->stmt_count = 1;
 
   // assertions
-  ASSERT_EQ(prog->stmt_count, 1);
+  ASSERT_EQ(prog->stmt_count, 1, "invalid stmt count");
   Statement *s = prog->statements[0];
-  ASSERT_EQ(s->kind, STMT_LET);
+  ASSERT_EQ(s->kind, STMT_LET, "invalid statement");
 
   LetStatement *ls = (LetStatement *)s;
-  ASSERT(sv_eq_cstr(ls->name->value, "my_var"));
-  ASSERT_EQ(((IntegerLiteral *)ls->value)->value, 5);
+  ASSERT(sv_eq_cstr(ls->name->value, "my_var"), "let statement ident mismatch");
+  ASSERT_EQ(((IntegerLiteral *)ls->value)->value, 5, "integral literal mismatch");
 
   arena_destroy(&ar);
 }
