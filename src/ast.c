@@ -23,6 +23,28 @@ const char *stmt_token_literal(const Statement *s) {
   return NULL;
 }
 
+/* checks and ensures program has capacity to store more statements allocates new if not */
+static void program_ensure_capacity(Program *program, Arena *arena) {
+  if (program->stmt_count < program->stmt_capacity) {
+    /* return as we still have space */
+    return;
+  }
+
+  size_t new_cap = (program->stmt_capacity == 0) ? 4 : program->stmt_capacity * 2;
+  Statement **new_arr = arena_alloc(arena, sizeof(Statement *) * new_cap, alignof(Statement *));
+  if (program->statements && program->stmt_count > 0) {
+    memcpy(new_arr, program->statements, sizeof(Statement *) * program->stmt_count);
+  }
+
+  program->statements = new_arr;
+  program->stmt_capacity = new_cap;
+}
+
+void program_add_statement(Program *prog, Arena *arena, Statement *stmt) {
+  program_ensure_capacity(prog, arena);
+  prog->statements[prog->stmt_count++] = stmt;
+}
+
 Program *ast_program_new(Arena *arena, size_t capacity) {
   Program *prog = arena_alloc(arena, sizeof(Program), alignof(Program));
   prog->stmt_count = 0;

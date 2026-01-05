@@ -60,9 +60,9 @@ typedef struct ExpressionStatement {
   Expression *expression;
 } ExpressionStatement;
 
-// ----------------------------------------------------------------
-// ------------------------ LITERALS ------------------------------
-// ----------------------------------------------------------------
+/*----------------------------------------------------------------
+ *  Literals
+ *----------------------------------------------------------------*/
 typedef struct IntegerLiteral {
   Expression base; // EXPR_INT
   Token token;
@@ -75,7 +75,15 @@ typedef struct FloatLiteral {
   double value;
 } FloatLiteral;
 
-const char* stmt_token_literal(const Statement* s);
+/*----------------------------------------------------------------
+ *  Core ast methods
+ *----------------------------------------------------------------*/
+
+/* gets the literal for the provided token */
+const char *stmt_token_literal(const Statement *s);
+
+/* safely adds a new statement into the program ensuring capacity in the heap */
+void program_add_statement(Program* prog, Arena* arena, Statement* stmt);
 
 /* Allocates a new Program using the arena allocator with the provided capcity */
 Program *ast_program_new(Arena *arena, size_t capacity);

@@ -82,7 +82,7 @@ Program *parse_program(Parser *p, Arena *arena) {
   /* loop until we encounter an EOF token */
   while (p->current_token.type != TOK_EOF) {
     Statement *stmt = (Statement *)parse_statement(p, arena);
-    if (stmt != NULL) { program->statements[program->stmt_count++] = stmt; }
+    if (stmt != NULL) { program_add_statement(program, arena, stmt); }
     p_next_token(p);
   }
   return program;
