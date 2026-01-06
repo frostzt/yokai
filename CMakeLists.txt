@@ -19,12 +19,14 @@ endif()
 # -----------------------------
 add_library(yokai_core STATIC
   src/arena.c
-  src/str.c
-  src/token.c
-  src/lexer.c
-  src/repl.c
   src/ast.c
+  src/lexer.c
   src/parser.c
+  src/repl.c
+  src/str.c
+  src/strbuf.c
+  src/token.c
+  src/util.c
 )
 
 target_include_directories(yokai_core PUBLIC include)
@@ -43,6 +45,7 @@ add_executable(yokai_test
   tests/ast_test.c
   tests/main.c
   tests/parser_test.c
+  tests/strbuf_test.c
   tests/token_test.c
 )
 target_include_directories(yokai_test PRIVATE tests)
