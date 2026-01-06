@@ -72,6 +72,7 @@ ReturnStatement *parse_return_statement(Parser *p, Arena *arena) {
 }
 
 LetStatement *parse_let_statement(Parser *p, Arena *arena) {
+  if (!p__current_token_is(p, TOK_LET)) { return NULL; }
   if (!p__expect_peek(p, arena, TOK_IDENT)) { return NULL; }
 
   /* create let token */
