@@ -14,15 +14,24 @@ typedef struct ParserTestStruct {
 
 bool test_let_statement(Statement *stmt, char *name) {
   ASSERT_EQ(stmt->kind, STMT_LET, "token is not of STMT_LET kind");
-  if (strncmp(stmt_token_literal(stmt), "let", 3) != 0) {
-    fprintf(stderr, "stmt not let");
-    abort();
-  }
+  ASSERT(strncmp(stmt_token_literal(stmt), "let", 3) == 0, "stmt not let");
 
   LetStatement *letStatement = (LetStatement *)stmt;
   ASSERT(strcmp(letStatement->name->value.data, name), "expected name does not match");
-
   return true;
+}
+
+void check_parser_errors(Parser *p) {
+  char **errors = p__errors(p);
+  if (p->error_count == 0) { return; }
+
+  printf("parser encountered %ld errors\n", p->error_count);
+  for (size_t i = 0; i < p->error_count; i++) {
+    char *err_msg = errors[i];
+    printf("parser error: %s\n", err_msg);
+  }
+
+  abort();
 }
 
 TEST(parser_parses_let_statement) {
@@ -41,6 +50,7 @@ TEST(parser_parses_let_statement) {
   Parser parser = {.lexer = &lexer};
   parser_init(&parser, &lexer, &arena);
   Program *program = parse_program(&parser, &arena);
+  check_parser_errors(&parser);
   ASSERT_NOT_NULL(program, "parse_program returned NULL");
   ASSERT_EQ(program->stmt_count, 3, "program statements do not contain 3 statements");
 

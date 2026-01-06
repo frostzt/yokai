@@ -24,25 +24,28 @@ typedef struct Parser {
 } Parser;
 
 /* reads the next token into the parser */
-void p_next_token(Parser *p);
+void p__next_token(Parser *p);
 
 /* initializes the parser with current and peek token */
 void parser_init(Parser *p, Lexer *l, Arena *arena);
 
 /* check if the current token type is the same as provided */
-bool current_token_is(Parser *p, TokenType ttype);
+bool p__current_token_is(Parser *p, TokenType ttype);
 
 /* check if the peek token type is the same as provided */
-bool peek_token_is(Parser *p, TokenType ttype);
+bool p__peek_token_is(Parser *p, TokenType ttype);
 
 /* moves ahead if the peek token matches the provided one */
-bool expect_peek(Parser *p, TokenType ttype);
+bool p__expect_peek(Parser *p, Arena *arena, TokenType ttype);
 
 /* adds a new error to the parser's errors array, handles alloc */
 void parser_add_error(Parser *p, Arena *arena, const char *);
 
 /* adds error to the parser by checking and matching the peek token with the exepcted token */
-void peek_error(Parser *p, Arena *arena, TokenType ttype);
+void p__peek_error(Parser *p, Arena *arena, TokenType ttype);
+
+/* returns all the errors encountered by the parser */
+char **p__errors(Parser *p);
 
 /*----------------------------------------------------------------
  *  Core parser methods

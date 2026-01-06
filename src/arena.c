@@ -1,3 +1,10 @@
+/*
+ * arena.c - Arena Allocator
+ *
+ * Author: frostzt
+ * Date: 2026-01-06
+ */
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>

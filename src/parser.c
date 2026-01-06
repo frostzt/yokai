@@ -53,7 +53,7 @@ void *parse_statement(Parser *p, Arena *arena) {
 }
 
 LetStatement *parse_let_statement(Parser *p, Arena *arena) {
-  if (!expect_peek(p, TOK_IDENT)) { return NULL; }
+  if (!p__expect_peek(p, arena, TOK_IDENT)) { return NULL; }
 
   /* create let token */
   Token let_tok;
@@ -68,10 +68,12 @@ LetStatement *parse_let_statement(Parser *p, Arena *arena) {
   Identifier *ident_name = ast_ident_new(arena, ident_token, ident_token.literal);
 
   /* next token should always be an assignment post that we can do pratt parsing */
-  if (!expect_peek(p, TOK_ASSIGN)) { return NULL; }
+  if (!p__expect_peek(p, arena, TOK_ASSIGN)) { return NULL; }
 
-  // TODO: Expressions
-  if (!expect_peek(p, TOK_SEMICOLON)) { p_next_token(p); }
+  // TODO: Expressions, right now skipping
+  p_next_token(p);
+
+  if (!p__expect_peek(p, arena, TOK_SEMICOLON)) { p_next_token(p); }
 
   LetStatement *let_stmt = ast_let_new(arena, let_tok, ident_name, NULL);
   return let_stmt;
@@ -88,7 +90,11 @@ Program *parse_program(Parser *p, Arena *arena) {
   return program;
 }
 
-void peek_error(Parser *p, Arena *arena, TokenType ttype) {
+char **p__errors(Parser *p) {
+  return p->errors;
+}
+
+void p__peek_error(Parser *p, Arena *arena, TokenType ttype) {
   const char *exp = token_type_name(ttype);
   const char *got = token_type_name(p->peek_token.type);
 
@@ -103,19 +109,20 @@ void peek_error(Parser *p, Arena *arena, TokenType ttype) {
   parser_add_error(p, arena, stored);
 }
 
-bool expect_peek(Parser *p, TokenType ttype) {
-  if (peek_token_is(p, ttype)) {
+bool p__expect_peek(Parser *p, Arena *arena, TokenType ttype) {
+  if (p__peek_token_is(p, ttype)) {
     p_next_token(p);
     return true;
   } else {
+    p__peek_error(p, arena, ttype);
     return false;
   }
 }
 
-bool peek_token_is(Parser *p, TokenType ttype) {
+bool p__peek_token_is(Parser *p, TokenType ttype) {
   return p->peek_token.type == ttype;
 }
 
-bool current_token_is(Parser *p, TokenType ttype) {
+bool p__current_token_is(Parser *p, TokenType ttype) {
   return p->current_token.type == ttype;
 }

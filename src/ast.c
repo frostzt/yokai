@@ -1,3 +1,10 @@
+/*
+ * ast.c - Abstract Syntax Tree logic for Yokai
+ *
+ * Author: frostzt
+ * Date: 2026-01-06
+ */
+
 #include <stdalign.h>
 #include <string.h>
 

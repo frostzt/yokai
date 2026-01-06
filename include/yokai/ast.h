@@ -1,3 +1,10 @@
+/*
+ * ast.h - Abstract Syntax Tree logic for Yokai
+ *
+ * Author: frostzt
+ * Date: 2026-01-06
+ */
+
 #ifndef YOKAI_AST_H
 #define YOKAI_AST_H
 
