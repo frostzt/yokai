@@ -15,7 +15,7 @@
 #include "yokai/parser.h"
 #include "yokai/token.h"
 
-void p_next_token(Parser *p) {
+void p__next_token(Parser *p) {
   p->current_token = p->peek_token;
   p->peek_token = next_token(p->lexer);
 }
@@ -47,9 +47,28 @@ void *parse_statement(Parser *p, Arena *arena) {
   switch (p->current_token.type) {
   case TOK_LET:
     return parse_let_statement(p, arena);
+  case TOK_RETURN:
+    return parse_return_statement(p, arena);
   default:
     return NULL;
   }
+}
+
+ReturnStatement *parse_return_statement(Parser *p, Arena *arena) {
+  if (!p__current_token_is(p, TOK_RETURN)) { return NULL; }
+
+  /* create return token */
+  Token return_tok;
+  return_tok.type = TOK_RETURN;
+  return_tok.literal = sv_from_cstr("return");
+
+  // TODO: Expressions, skipping
+  p__next_token(p);
+
+  if (!p__peek_token_is(p, TOK_SEMICOLON)) { p__next_token(p); }
+
+  ReturnStatement *rtn_stmt = ast_return_new(arena, return_tok, NULL);
+  return rtn_stmt;
 }
 
 LetStatement *parse_let_statement(Parser *p, Arena *arena) {
@@ -71,9 +90,9 @@ LetStatement *parse_let_statement(Parser *p, Arena *arena) {
   if (!p__expect_peek(p, arena, TOK_ASSIGN)) { return NULL; }
 
   // TODO: Expressions, right now skipping
-  p_next_token(p);
+  p__next_token(p);
 
-  if (!p__expect_peek(p, arena, TOK_SEMICOLON)) { p_next_token(p); }
+  if (!p__expect_peek(p, arena, TOK_SEMICOLON)) { p__next_token(p); }
 
   LetStatement *let_stmt = ast_let_new(arena, let_tok, ident_name, NULL);
   return let_stmt;
@@ -85,7 +104,7 @@ Program *parse_program(Parser *p, Arena *arena) {
   while (p->current_token.type != TOK_EOF) {
     Statement *stmt = (Statement *)parse_statement(p, arena);
     if (stmt != NULL) { program_add_statement(program, arena, stmt); }
-    p_next_token(p);
+    p__next_token(p);
   }
   return program;
 }
@@ -111,7 +130,7 @@ void p__peek_error(Parser *p, Arena *arena, TokenType ttype) {
 
 bool p__expect_peek(Parser *p, Arena *arena, TokenType ttype) {
   if (p__peek_token_is(p, ttype)) {
-    p_next_token(p);
+    p__next_token(p);
     return true;
   } else {
     p__peek_error(p, arena, ttype);

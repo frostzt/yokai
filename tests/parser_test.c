@@ -67,3 +67,30 @@ TEST(parser_parses_let_statement) {
            "failed to validate let statement");
   }
 }
+
+TEST(parser_parses_return_statement) {
+  Arena arena = arena_create(512);
+
+  const char *input_raw = "return 5; \
+                           return 10; \
+                           return 84239823; \
+                          ";
+
+  StrView input = {.data = input_raw, .len = strlen(input_raw)};
+  /* create a new lexer, this internally skips one token */
+  Lexer lexer = {.input = input, .position = 0, .read_position = 0, .ch = 0};
+  read_char(&lexer);
+  /* create a new parser, this internally skips two tokens */
+  Parser parser = {.lexer = &lexer};
+  parser_init(&parser, &lexer, &arena);
+  Program *program = parse_program(&parser, &arena);
+  check_parser_errors(&parser);
+  ASSERT_NOT_NULL(program, "parse_program returned NULL");
+  ASSERT_EQ(program->stmt_count, 3, "program statements do not contain 3 statements");
+
+  for (size_t i = 0; i < program->stmt_count; i++) {
+    Statement *stmt = program->statements[i];
+    ASSERT_EQ(stmt->kind, STMT_RETURN, "token is not of STMT_RETURN kind");
+    ASSERT(strncmp(stmt_token_literal(stmt), "return", 6) == 0, "stmt not return");
+  }
+}

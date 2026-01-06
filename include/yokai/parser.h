@@ -54,6 +54,9 @@ char **p__errors(Parser *p);
 /* parses a "let" statement */
 LetStatement *parse_let_statement(Parser *p, Arena *arena);
 
+/* parses a "return" statement */
+ReturnStatement *parse_return_statement(Parser *p, Arena *arena);
+
 /* parses a statement and returns */
 void *parse_statement(Parser *p, Arena *arena);
 

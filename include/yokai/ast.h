@@ -48,6 +48,9 @@ typedef struct Identifier {
   StrView value;
 } Identifier;
 
+/*----------------------------------------------------------------
+ *  Statements
+ *----------------------------------------------------------------*/
 typedef struct LetStatement {
   Statement base; // STMT_LET
   Token token;    // 'let'
@@ -83,6 +86,16 @@ typedef struct FloatLiteral {
 } FloatLiteral;
 
 /*----------------------------------------------------------------
+ *  Core ast methods -- Statements
+ *----------------------------------------------------------------*/
+
+/* Allocates a new LetStatement using the arena allocator */
+LetStatement *ast_let_new(Arena *arena, Token token, Identifier *name, Expression *value);
+
+/* Allocates a new LetStatement using the arena allocator */
+ReturnStatement *ast_return_new(Arena *arena, Token token, Expression *value);
+
+/*----------------------------------------------------------------
  *  Core ast methods
  *----------------------------------------------------------------*/
 
@@ -95,13 +108,10 @@ void program_add_statement(Program* prog, Arena* arena, Statement* stmt);
 /* Allocates a new Program using the arena allocator with the provided capcity */
 Program *ast_program_new(Arena *arena, size_t capacity);
 
-/* Allocates a new LetStatement using the arena allocator */
-LetStatement *ast_let_new(Arena *, Token token, Identifier *name, Expression *value);
-
 /* Allocates a new Identifier using the arena allocator */
-Identifier *ast_ident_new(Arena *, Token token, StrView value);
+Identifier *ast_ident_new(Arena *arena, Token token, StrView value);
 
 /* Allocates a new IntegerLiteral using the arena allocator */
-IntegerLiteral *ast_int_new(Arena *, Token token, int64_t value);
+IntegerLiteral *ast_int_new(Arena *arena, Token token, int64_t value);
 
 #endif // YOKAI_AST_H

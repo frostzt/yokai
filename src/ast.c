@@ -62,12 +62,20 @@ Program *ast_program_new(Arena *arena, size_t capacity) {
 }
 
 LetStatement *ast_let_new(Arena *arena, Token token, Identifier *name, Expression *value) {
-  LetStatement *letStmt = arena_alloc(arena, sizeof(LetStatement), alignof(LetStatement));
-  letStmt->base.kind = STMT_LET;
-  letStmt->token = token;
-  letStmt->name = name;
-  letStmt->value = value;
-  return letStmt;
+  LetStatement *let_stmt = arena_alloc(arena, sizeof(LetStatement), alignof(LetStatement));
+  let_stmt->base.kind = STMT_LET;
+  let_stmt->token = token;
+  let_stmt->name = name;
+  let_stmt->value = value;
+  return let_stmt;
+}
+
+ReturnStatement *ast_return_new(Arena *arena, Token token, Expression *value) {
+  ReturnStatement *rtn_stmt = arena_alloc(arena, sizeof(ReturnStatement), alignof(ReturnStatement));
+  rtn_stmt->base.kind = STMT_RETURN;
+  rtn_stmt->token = token;
+  rtn_stmt->return_value = value;
+  return rtn_stmt;
 }
 
 Identifier *ast_ident_new(Arena *arena, Token token, StrView value) {
