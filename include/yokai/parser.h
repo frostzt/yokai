@@ -94,10 +94,10 @@ void register_infix(Parser *p, TokenType ttype, InfixParseFn fn);
  *----------------------------------------------------------------*/
 
 /* parses a "let" statement */
-LetStatement *parse_let_statement(Parser *p, Arena *arena);
+Statement *parse_let_statement(Parser *p, Arena *arena);
 
 /* parses a "return" statement */
-ReturnStatement *parse_return_statement(Parser *p, Arena *arena);
+Statement *parse_return_statement(Parser *p, Arena *arena);
 
 /* parses a statement and returns */
 void *parse_statement(Parser *p, Arena *arena);
@@ -110,7 +110,7 @@ Program *parse_program(Parser *p, Arena *arena);
  *----------------------------------------------------------------*/
 
 /* parses an expression statement */
-ExpressionStatement *parse_expression_statement(Parser *p, Arena *arena);
+Statement *parse_expression_statement(Parser *p, Arena *arena);
 
 /* parses an expression */
 Expression *parse_expression(Parser *p);

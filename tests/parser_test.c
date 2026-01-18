@@ -17,8 +17,8 @@ bool test_let_statement(Statement *stmt, char *name) {
   ASSERT_EQ(stmt->kind, STMT_LET, "token is not of STMT_LET kind");
   ASSERT(strncmp(stmt_token_literal(stmt), "let", 3) == 0, "stmt not let");
 
-  LetStatement *letStatement = (LetStatement *)stmt;
-  ASSERT(strcmp(letStatement->name->value.data, name), "expected name does not match");
+  ASSERT(strcmp(stmt->as.stmt_let.name->as.expr_ident.value.data, name),
+         "expected name does not match");
   return true;
 }
 
@@ -117,9 +117,7 @@ TEST(parser__simple_identifier_expression) {
   Statement *stmt = program->statements[0];
   ASSERT_EQ(stmt->kind, STMT_EXPR, "not an expression statement");
 
-  ExpressionStatement *expr_stmt = (ExpressionStatement *)stmt;
-  Identifier *ident = (Identifier *)expr_stmt->expression;
-
-  ASSERT(sv_eq_cstr(ident->value, "foobar"), "invalid identifier");
+  Expression *ident = stmt->as.stmt_expr.expr;
+  ASSERT(sv_eq_cstr(ident->as.expr_ident.value, "foobar"), "invalid identifier");
   ASSERT(sv_eq_cstr(ident->token.literal, "foobar"), "invalid token literal");
 }

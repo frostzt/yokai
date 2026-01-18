@@ -72,13 +72,13 @@ void register_infix(Parser *p, TokenType ttype, InfixParseFn fn) {
   p->infix_fns[ttype] = fn;
 }
 
-ExpressionStatement *parse_expression_statement(Parser *p, Arena *arena) {
+Statement *parse_expression_statement(Parser *p, Arena *arena) {
   Expression *expr = parse_expression(p);
   if (expr == NULL) { return NULL; }
 
   if (p__peek_token_is(p, TOK_SEMICOLON)) { p__next_token(p); }
 
-  ExpressionStatement *expr_stmt = ast_expr_stmt_new(arena, p->current_token, expr);
+  Statement *expr_stmt = ast_expr_stmt_new(arena, p->current_token, expr);
   return expr_stmt;
 }
 
@@ -90,7 +90,7 @@ Expression *parse_expression(Parser *p) {
   return left_expression;
 }
 
-ReturnStatement *parse_return_statement(Parser *p, Arena *arena) {
+Statement *parse_return_statement(Parser *p, Arena *arena) {
   if (!p__current_token_is(p, TOK_RETURN)) { return NULL; }
 
   /* create return token */
@@ -103,11 +103,11 @@ ReturnStatement *parse_return_statement(Parser *p, Arena *arena) {
     p__next_token(p);
   }
 
-  ReturnStatement *rtn_stmt = ast_return_new(arena, return_tok, NULL);
+  Statement *rtn_stmt = ast_expr_return_new(arena, return_tok, NULL);
   return rtn_stmt;
 }
 
-LetStatement *parse_let_statement(Parser *p, Arena *arena) {
+Statement *parse_let_statement(Parser *p, Arena *arena) {
   if (!p__current_token_is(p, TOK_LET)) { return NULL; }
   if (!p__expect_peek(p, arena, TOK_IDENT)) { return NULL; }
 
@@ -121,7 +121,7 @@ LetStatement *parse_let_statement(Parser *p, Arena *arena) {
   ident_token.type = TOK_IDENT;
   ident_token.literal = p->current_token.literal;
   /* create a new identifier from the arena allocator */
-  Identifier *ident_name = ast_ident_new(arena, ident_token, ident_token.literal);
+  Expression *ident_name = ast_expr_ident_new(arena, ident_token, ident_token.literal);
 
   /* next token should always be an assignment post that we can do pratt parsing */
   if (!p__expect_peek(p, arena, TOK_ASSIGN)) { return NULL; }
@@ -131,7 +131,7 @@ LetStatement *parse_let_statement(Parser *p, Arena *arena) {
     p__next_token(p);
   }
 
-  LetStatement *let_stmt = ast_let_new(arena, let_tok, ident_name, NULL);
+  Statement *let_stmt = ast_expr_let_new(arena, let_tok, ident_name, NULL);
   return let_stmt;
 }
 

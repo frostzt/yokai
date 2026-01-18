@@ -14,18 +14,10 @@
 
 const char *stmt_token_literal(const Statement *s) {
   switch (s->kind) {
-  case STMT_LET: {
-    const LetStatement *ls = (const LetStatement *)s;
-    return ls->token.literal.data;
-  }
-  case STMT_RETURN: {
-    const ReturnStatement *rs = (const ReturnStatement *)s;
-    return rs->token.literal.data;
-  }
-  case STMT_EXPR: {
-    const ExpressionStatement *es = (const ExpressionStatement *)s;
-    return es->token.literal.data;
-  }
+  case STMT_RETURN:
+  case STMT_EXPR:
+  case STMT_LET:
+    return s->token.literal.data;
   }
 
   return NULL;
@@ -40,28 +32,27 @@ void ast__prog_to_string(const Program *prog, StrBuf *str_buf) {
 void ast__stmt_to_string(const Statement *stmt, StrBuf *str_buf) {
   switch (stmt->kind) {
   case STMT_LET: {
-    const LetStatement *let_stmt = (const LetStatement *)stmt;
-    sb__append_strview(str_buf, let_stmt->token.literal); // let
+    sb__append_strview(str_buf, stmt->token.literal); // let
     sb__append_cstr(str_buf, " ");
-    sb__append_strview(str_buf, let_stmt->name->value);
+    sb__append_strview(str_buf, stmt->as.stmt_let.name->as.expr_ident.value);
     sb__append_cstr(str_buf, " = ");
-    if (let_stmt->value) { ast__expr_to_string(let_stmt->value, str_buf); }
+    if (stmt->as.stmt_let.value) { ast__expr_to_string(stmt->as.stmt_let.value, str_buf); }
     sb__append_cstr(str_buf, ";");
     break;
   };
 
   case STMT_RETURN: {
-    const ReturnStatement *rtn_stmt = (const ReturnStatement *)stmt;
-    sb__append_strview(str_buf, rtn_stmt->token.literal); // return
+    sb__append_strview(str_buf, stmt->token.literal); // return
     sb__append_cstr(str_buf, " ");
-    if (rtn_stmt->return_value) { ast__expr_to_string(rtn_stmt->return_value, str_buf); }
+    if (stmt->as.stmt_return.return_value) {
+      ast__expr_to_string(stmt->as.stmt_return.return_value, str_buf);
+    }
     sb__append_cstr(str_buf, ";");
     break;
   };
 
   case STMT_EXPR: {
-    const ExpressionStatement *expr_stmt = (const ExpressionStatement *)stmt;
-    if (expr_stmt->expression) { ast__expr_to_string(expr_stmt->expression, str_buf); }
+    if (stmt->as.stmt_expr.expr) { ast__expr_to_string(stmt->as.stmt_expr.expr, str_buf); }
     sb__append_cstr(str_buf, ";");
     break;
   };
@@ -71,21 +62,18 @@ void ast__stmt_to_string(const Statement *stmt, StrBuf *str_buf) {
 void ast__expr_to_string(const Expression *expr, StrBuf *str_buf) {
   switch (expr->kind) {
   case EXPR_IDENT: {
-    const Identifier *id = (const Identifier *)expr;
-    sb__append_strview(str_buf, id->value);
+    sb__append_strview(str_buf, expr->as.expr_ident.value);
     break;
   }
   case EXPR_INT: {
-    const IntegerLiteral *il = (const IntegerLiteral *)expr;
     char buf[32];
-    int n = snprintf(buf, sizeof(buf), "%lld", (long long)il->value);
+    int n = snprintf(buf, sizeof(buf), "%lld", expr->as.expr_int_literal.value);
     sb__append(str_buf, buf, n);
     break;
   }
   case EXPR_FLOAT: {
-    const FloatLiteral *fl = (const FloatLiteral *)expr;
     char buf[64];
-    int n = snprintf(buf, sizeof(buf), "%g", fl->value);
+    int n = snprintf(buf, sizeof(buf), "%g", expr->as.expr_float_literal.value);
     sb__append(str_buf, buf, n);
     break;
   }
@@ -93,10 +81,6 @@ void ast__expr_to_string(const Expression *expr, StrBuf *str_buf) {
   case EXPR_INFIX:
     break;
   }
-}
-
-void ast__ident_to_string(const Identifier *ident, StrBuf *str_buf) {
-  sb__append_strview(str_buf, ident->value);
 }
 
 /* checks and ensures program has capacity to store more statements allocates new if not */
@@ -130,52 +114,51 @@ Program *ast_program_new(Arena *arena, size_t capacity) {
   return prog;
 }
 
-LetStatement *ast_let_new(Arena *arena, Token token, Identifier *name, Expression *value) {
-  LetStatement *let_stmt = arena_alloc(arena, sizeof(LetStatement), alignof(LetStatement));
-  let_stmt->base.kind = STMT_LET;
+Statement *ast_expr_let_new(Arena *arena, Token token, Expression *name, Expression *value) {
+  Statement *let_stmt = arena_alloc(arena, sizeof(Statement), alignof(Statement));
+  let_stmt->kind = STMT_LET;
   let_stmt->token = token;
-  let_stmt->name = name;
-  let_stmt->value = value;
+  let_stmt->as.stmt_let.name = name;
+  let_stmt->as.stmt_let.value = value;
   return let_stmt;
 }
 
-ReturnStatement *ast_return_new(Arena *arena, Token token, Expression *value) {
-  ReturnStatement *rtn_stmt = arena_alloc(arena, sizeof(ReturnStatement), alignof(ReturnStatement));
-  rtn_stmt->base.kind = STMT_RETURN;
+Statement *ast_expr_return_new(Arena *arena, Token token, Expression *value) {
+  Statement *rtn_stmt = arena_alloc(arena, sizeof(Statement), alignof(Statement));
+  rtn_stmt->kind = STMT_RETURN;
   rtn_stmt->token = token;
-  rtn_stmt->return_value = value;
+  rtn_stmt->as.stmt_return.return_value = value;
   return rtn_stmt;
 }
 
-ExpressionStatement *ast_expr_stmt_new(Arena *arena, Token token, Expression *value) {
-  ExpressionStatement *expr_stmt =
-      arena_alloc(arena, sizeof(ExpressionStatement), alignof(ExpressionStatement));
-  expr_stmt->base.kind = STMT_EXPR;
+Statement *ast_expr_stmt_new(Arena *arena, Token token, Expression *value) {
+  Statement *expr_stmt = arena_alloc(arena, sizeof(Statement), alignof(Statement));
+  expr_stmt->kind = STMT_EXPR;
   expr_stmt->token = token;
-  expr_stmt->expression = value;
+  expr_stmt->as.stmt_expr.expr = value;
   return expr_stmt;
 }
 
-Identifier *ast_ident_new(Arena *arena, Token token, StrView value) {
-  Identifier *ident = arena_alloc(arena, sizeof(Identifier), alignof(Identifier));
+Expression *ast_expr_ident_new(Arena *arena, Token token, StrView value) {
+  Expression *ident = arena_alloc(arena, sizeof(Expression), alignof(Expression));
   ident->token = token;
-  ident->base.kind = EXPR_IDENT;
-  ident->value = value;
+  ident->kind = EXPR_IDENT;
+  ident->as.expr_ident.value = value;
   return ident;
 }
 
-IntegerLiteral *ast_int_new(Arena *arena, Token token, int64_t value) {
-  IntegerLiteral *intLit = arena_alloc(arena, sizeof(IntegerLiteral), alignof(IntegerLiteral));
-  intLit->token = token;
-  intLit->base.kind = EXPR_INT;
-  intLit->value = value;
-  return intLit;
+Expression *ast_expr_int_new(Arena *arena, Token token, int64_t value) {
+  Expression *int_lit = arena_alloc(arena, sizeof(Expression), alignof(Expression));
+  int_lit->token = token;
+  int_lit->kind = EXPR_INT;
+  int_lit->as.expr_int_literal.value = value;
+  return int_lit;
 }
 
-FloatLiteral *ast_float_new(Arena *arena, Token token, double value) {
-  FloatLiteral *floatLit = arena_alloc(arena, sizeof(FloatLiteral), alignof(FloatLiteral));
-  floatLit->token = token;
-  floatLit->base.kind = EXPR_FLOAT;
-  floatLit->value = value;
-  return floatLit;
+Expression *ast_expr_float_new(Arena *arena, Token token, double value) {
+  Expression *float_lit = arena_alloc(arena, sizeof(Expression), alignof(Expression));
+  float_lit->token = token;
+  float_lit->kind = EXPR_FLOAT;
+  float_lit->as.expr_float_literal.value = value;
+  return float_lit;
 }

@@ -27,10 +27,10 @@ TEST(ast_simple_stmt) {
   int_tok.literal = sv_from_cstr("5");
 
   Program *prog = ast_program_new(&ar, 8);
-  Identifier *ident = ast_ident_new(&ar, ident_tok, ident_tok.literal);
-  IntegerLiteral *intLiteral = ast_int_new(&ar, int_tok, 5);
+  Expression *ident = ast_expr_ident_new(&ar, ident_tok, ident_tok.literal);
+  Expression *intLiteral = ast_expr_int_new(&ar, int_tok, 5);
 
-  LetStatement *letStmt = ast_let_new(&ar, let_tok, ident, (Expression *)intLiteral);
+  Statement *letStmt = ast_expr_let_new(&ar, let_tok, ident, (Expression *)intLiteral);
 
   prog->statements[0] = (Statement *)letStmt;
   prog->stmt_count = 1;
@@ -40,9 +40,9 @@ TEST(ast_simple_stmt) {
   Statement *s = prog->statements[0];
   ASSERT_EQ(s->kind, STMT_LET, "invalid statement");
 
-  LetStatement *ls = (LetStatement *)s;
-  ASSERT(sv_eq_cstr(ls->name->value, "my_var"), "let statement ident mismatch");
-  ASSERT_EQ(((IntegerLiteral *)ls->value)->value, 5, "integral literal mismatch");
+  ASSERT(sv_eq_cstr(s->as.stmt_let.name->as.expr_ident.value, "my_var"),
+         "let statement ident mismatch");
+  ASSERT_EQ(s->as.stmt_let.value->as.expr_int_literal.value, 5, "integral literal mismatch");
 
   arena_destroy(&ar);
 }
@@ -66,9 +66,10 @@ TEST(ast_to_string) {
   another_ident_tok.literal = sv_from_cstr("another_var");
 
   Program *prog = ast_program_new(&arena, 8);
-  Identifier *ident = ast_ident_new(&arena, ident_tok, ident_tok.literal);
-  Identifier *another_ident = ast_ident_new(&arena, another_ident_tok, another_ident_tok.literal);
-  LetStatement *let_stmt = ast_let_new(&arena, let_tok, ident, (Expression *)another_ident);
+  Expression *ident = ast_expr_ident_new(&arena, ident_tok, ident_tok.literal);
+  Expression *another_ident =
+      ast_expr_ident_new(&arena, another_ident_tok, another_ident_tok.literal);
+  Statement *let_stmt = ast_expr_let_new(&arena, let_tok, ident, another_ident);
 
   prog->statements[0] = (Statement *)let_stmt;
   prog->stmt_count = 1;

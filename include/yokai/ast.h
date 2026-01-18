@@ -29,13 +29,31 @@ typedef enum {
   EXPR_INFIX,
 } ExpressionKind;
 
-typedef struct Statement {
-  StatementKind kind;
-} Statement;
-
 typedef struct Expression {
   ExpressionKind kind;
+  Token token;
+  /* clang-format off */
+  union {
+    struct { StrView value; } expr_ident;
+    struct { int64_t value; } expr_int_literal;
+    struct { double value; } expr_float_literal;
+    struct { Token op; struct Expression* right; } expr_prefix;
+    struct { struct Expression* left; Token op; struct Expression* right; } expr_infix;
+  } as;
+  /* clang-format on */
 } Expression;
+
+typedef struct Statement {
+  StatementKind kind;
+  Token token;
+  union {
+    /* clang-format off */
+    struct { Expression* name; Expression* value; } stmt_let;
+    struct { Expression* return_value; } stmt_return;
+    struct { Expression* expr; } stmt_expr;
+    /* clang-format on */
+  } as;
+} Statement;
 
 typedef struct Program {
   Statement **statements;
@@ -43,61 +61,18 @@ typedef struct Program {
   size_t stmt_capacity;
 } Program;
 
-typedef struct Identifier {
-  Expression base; // EXPR_IDENT
-  Token token;
-  StrView value;
-} Identifier;
-
-/*----------------------------------------------------------------
- *  Statements
- *----------------------------------------------------------------*/
-typedef struct LetStatement {
-  Statement base; // STMT_LET
-  Token token;    // 'let'
-  Identifier *name;
-  Expression *value;
-} LetStatement;
-
-typedef struct ReturnStatement {
-  Statement base; // STMT_RETURN
-  Token token;    // 'return'
-  Expression *return_value;
-} ReturnStatement;
-
-typedef struct ExpressionStatement {
-  Statement base; // STMT_EXPR
-  Token token;
-  Expression *expression;
-} ExpressionStatement;
-
-/*----------------------------------------------------------------
- *  Literals
- *----------------------------------------------------------------*/
-typedef struct IntegerLiteral {
-  Expression base; // EXPR_INT
-  Token token;
-  int64_t value;
-} IntegerLiteral;
-
-typedef struct FloatLiteral {
-  Expression base; // EXPR_FLOAT
-  Token token;
-  double value;
-} FloatLiteral;
-
 /*----------------------------------------------------------------
  *  Core ast methods -- Statements
  *----------------------------------------------------------------*/
 
 /* Allocates a new ExpressionStatement using the arena allocator */
-ExpressionStatement *ast_expr_stmt_new(Arena *arena, Token token, Expression *value);
+Statement *ast_expr_stmt_new(Arena *arena, Token token, Expression *value);
 
 /* Allocates a new LetStatement using the arena allocator */
-LetStatement *ast_let_new(Arena *arena, Token token, Identifier *name, Expression *value);
+Statement *ast_expr_let_new(Arena *arena, Token token, Expression *name, Expression *value);
 
 /* Allocates a new LetStatement using the arena allocator */
-ReturnStatement *ast_return_new(Arena *arena, Token token, Expression *value);
+Statement *ast_expr_return_new(Arena *arena, Token token, Expression *value);
 
 /*----------------------------------------------------------------
  *  AST to String
@@ -111,9 +86,6 @@ void ast__stmt_to_string(const Statement *stmt, StrBuf *str_buf);
 
 /* builds a string representation of an expression */
 void ast__expr_to_string(const Expression *expr, StrBuf *str_buf);
-
-/* builds a string representation of an identifier */
-void ast__ident_to_string(const Identifier *ident, StrBuf *str_buf);
 
 /*----------------------------------------------------------------
  *  Core ast methods
@@ -129,9 +101,12 @@ void program_add_statement(Program *prog, Arena *arena, Statement *stmt);
 Program *ast_program_new(Arena *arena, size_t capacity);
 
 /* Allocates a new Identifier using the arena allocator */
-Identifier *ast_ident_new(Arena *arena, Token token, StrView value);
+Expression *ast_expr_ident_new(Arena *arena, Token token, StrView value);
 
 /* Allocates a new IntegerLiteral using the arena allocator */
-IntegerLiteral *ast_int_new(Arena *arena, Token token, int64_t value);
+Expression *ast_expr_int_new(Arena *arena, Token token, int64_t value);
+
+/* Allocates a new FloatLiteral using the arena allocator */
+Expression *ast_expr_float_new(Arena *arena, Token token, double value);
 
 #endif // YOKAI_AST_H
