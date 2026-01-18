@@ -29,6 +29,7 @@ Arena arena_create(size_t block_size) {
   return ar;
 }
 
+
 void arena_destroy(Arena *arena) {
   if (!arena) {
     return;

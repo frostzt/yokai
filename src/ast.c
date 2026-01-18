@@ -6,6 +6,7 @@
  */
 
 #include <stdalign.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "yokai/arena.h"
@@ -28,6 +29,74 @@ const char *stmt_token_literal(const Statement *s) {
   }
 
   return NULL;
+}
+
+void ast__prog_to_string(const Program *prog, StrBuf *str_buf) {
+  for (size_t i = 0; i < prog->stmt_count; i++) {
+    ast__stmt_to_string(prog->statements[i], str_buf);
+  }
+}
+
+void ast__stmt_to_string(const Statement *stmt, StrBuf *str_buf) {
+  switch (stmt->kind) {
+  case STMT_LET: {
+    const LetStatement *let_stmt = (const LetStatement *)stmt;
+    sb__append_strview(str_buf, let_stmt->token.literal); // let
+    sb__append_cstr(str_buf, " ");
+    sb__append_strview(str_buf, let_stmt->name->value);
+    sb__append_cstr(str_buf, " = ");
+    if (let_stmt->value) { ast__expr_to_string(let_stmt->value, str_buf); }
+    sb__append_cstr(str_buf, ";");
+    break;
+  };
+
+  case STMT_RETURN: {
+    const ReturnStatement *rtn_stmt = (const ReturnStatement *)stmt;
+    sb__append_strview(str_buf, rtn_stmt->token.literal); // return
+    sb__append_cstr(str_buf, " ");
+    if (rtn_stmt->return_value) { ast__expr_to_string(rtn_stmt->return_value, str_buf); }
+    sb__append_cstr(str_buf, ";");
+    break;
+  };
+
+  case STMT_EXPR: {
+    const ExpressionStatement *expr_stmt = (const ExpressionStatement *)stmt;
+    if (expr_stmt->expression) { ast__expr_to_string(expr_stmt->expression, str_buf); }
+    sb__append_cstr(str_buf, ";");
+    break;
+  };
+  }
+}
+
+void ast__expr_to_string(const Expression *expr, StrBuf *str_buf) {
+  switch (expr->kind) {
+  case EXPR_IDENT: {
+    const Identifier *id = (const Identifier *)expr;
+    sb__append_strview(str_buf, id->value);
+    break;
+  }
+  case EXPR_INT: {
+    const IntegerLiteral *il = (const IntegerLiteral *)expr;
+    char buf[32];
+    int n = snprintf(buf, sizeof(buf), "%lld", (long long)il->value);
+    sb__append(str_buf, buf, n);
+    break;
+  }
+  case EXPR_FLOAT: {
+    const FloatLiteral *fl = (const FloatLiteral *)expr;
+    char buf[64];
+    int n = snprintf(buf, sizeof(buf), "%g", fl->value);
+    sb__append(str_buf, buf, n);
+    break;
+  }
+  case EXPR_PREFIX:
+  case EXPR_INFIX:
+    break;
+  }
+}
+
+void ast__ident_to_string(const Identifier *ident, StrBuf *str_buf) {
+  sb__append_strview(str_buf, ident->value);
 }
 
 /* checks and ensures program has capacity to store more statements allocates new if not */
@@ -76,6 +145,15 @@ ReturnStatement *ast_return_new(Arena *arena, Token token, Expression *value) {
   rtn_stmt->token = token;
   rtn_stmt->return_value = value;
   return rtn_stmt;
+}
+
+ExpressionStatement *ast_expr_stmt_new(Arena *arena, Token token, Expression *value) {
+  ExpressionStatement *expr_stmt =
+      arena_alloc(arena, sizeof(ExpressionStatement), alignof(ExpressionStatement));
+  expr_stmt->base.kind = STMT_EXPR;
+  expr_stmt->token = token;
+  expr_stmt->expression = value;
+  return expr_stmt;
 }
 
 Identifier *ast_ident_new(Arena *arena, Token token, StrView value) {

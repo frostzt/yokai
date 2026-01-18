@@ -10,8 +10,8 @@
   X(arena_reset)                                                                                   \
   X(lexer_full_token)                                                                              \
   X(ast_simple_stmt)                                                                               \
-  X(parser_parses_let_statement)                                                                   \
-  X(parser_parses_return_statement)                                                                \
+  X(parser__parses_let_statement)                                                                   \
+  X(parser__parses_return_statement)                                                                \
   X(strbuf_through_check)
 
 #endif // YOKAI_TEST_REGISTRY_H

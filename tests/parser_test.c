@@ -7,6 +7,7 @@
 #include "yokai/ast.h"
 #include "yokai/lexer.h"
 #include "yokai/parser.h"
+#include "yokai/str.h"
 
 typedef struct ParserTestStruct {
   char *expected_identifier;
@@ -34,7 +35,7 @@ void check_parser_errors(Parser *p) {
   abort();
 }
 
-TEST(parser_parses_let_statement) {
+TEST(parser__parses_let_statement) {
   Arena arena = arena_create(512);
 
   const char *input_raw = "let x = 5; \
@@ -68,7 +69,7 @@ TEST(parser_parses_let_statement) {
   }
 }
 
-TEST(parser_parses_return_statement) {
+TEST(parser__parses_return_statement) {
   Arena arena = arena_create(512);
 
   const char *input_raw = "return 5; \
@@ -93,4 +94,32 @@ TEST(parser_parses_return_statement) {
     ASSERT_EQ(stmt->kind, STMT_RETURN, "token is not of STMT_RETURN kind");
     ASSERT(strncmp(stmt_token_literal(stmt), "return", 6) == 0, "stmt not return");
   }
+}
+
+TEST(parser__simple_identifier_expression) {
+  Arena arena = arena_create(128);
+
+  const char *input_raw = "foobar;";
+
+  StrView input = {.data = input_raw, .len = strlen(input_raw)};
+  /* create a new lexer, this internally skips one token */
+  Lexer lexer = {.input = input, .position = 0, .read_position = 0, .ch = 0};
+  read_char(&lexer);
+  /* create a new parser, this internally skips two tokens */
+  Parser parser = {.lexer = &lexer};
+  parser_init(&parser, &lexer, &arena);
+  Program *program = parse_program(&parser, &arena);
+  check_parser_errors(&parser);
+
+  ASSERT_NOT_NULL(program, "parse_program returned NULL");
+  ASSERT_EQ(program->stmt_count, 1, "program statements does not contain 1 statement");
+
+  Statement *stmt = program->statements[0];
+  ASSERT_EQ(stmt->kind, STMT_EXPR, "not an expression statement");
+
+  ExpressionStatement *expr_stmt = (ExpressionStatement *)stmt;
+  Identifier *ident = (Identifier *)expr_stmt->expression;
+
+  ASSERT(sv_eq_cstr(ident->value, "foobar"), "invalid identifier");
+  ASSERT(sv_eq_cstr(ident->token.literal, "foobar"), "invalid token literal");
 }

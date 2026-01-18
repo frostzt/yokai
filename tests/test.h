@@ -18,7 +18,7 @@ static int tests_passed = 0;
     printf("PASSED\n");                                                                            \
   } while (0)
 
-#define ASSERT(cond, msg)                                                                               \
+#define ASSERT(cond, msg)                                                                          \
   do {                                                                                             \
     if (!(cond)) {                                                                                 \
       fprintf(stderr, "ASSERTION FAILED: %s\n", msg);                                              \

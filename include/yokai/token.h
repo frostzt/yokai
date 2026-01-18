@@ -40,6 +40,9 @@ typedef enum TokenType {
   TOK_IF,
   TOK_ELSE,
   TOK_RETURN,
+
+  // sentinel
+  TOK__COUNT,
 } TokenType;
 
 typedef struct Token {

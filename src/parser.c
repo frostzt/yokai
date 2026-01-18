@@ -28,7 +28,21 @@ void parser_init(Parser *p, Lexer *l, Arena *arena) {
 
   p->current_token = next_token(p->lexer);
   p->peek_token = next_token(p->lexer);
+
+  /* init precedence */
+  p->prec[TOK_EQ] = p->prec[TOK_NOT_EQ] = PREC_EQUALS;
+  p->prec[TOK_LT] = p->prec[TOK_GT] = PREC_LESSGREATER;
+  p->prec[TOK_PLUS] = p->prec[TOK_MINUS] = PREC_SUM;
+  p->prec[TOK_ASTERISK] = p->prec[TOK_SLASH] = PREC_PRODUCT;
+  p->prec[TOK_LPAREN] = PREC_CALL;
+
+  /* init prefix parsers */
+  // p->prefix_fns[TOK_IDENT] =
 }
+
+// Expression *parse_identifier(Parser *p, Arena *arena) {
+//   Identifier *ident = ast_ident_new(arena, p->current_token, p->current_token.literal);
+// }
 
 void parser_add_error(Parser *p, Arena *arena, const char *msg) {
   if (p->error_count == p->error_cap) {
@@ -50,8 +64,32 @@ void *parse_statement(Parser *p, Arena *arena) {
   case TOK_RETURN:
     return parse_return_statement(p, arena);
   default:
-    return NULL;
+    return parse_expression_statement(p, arena);
   }
+}
+
+void register_prefix(Parser *p, TokenType ttype, PrefixParseFn fn) {
+  p->prefix_fns[ttype] = fn;
+}
+
+void register_infix(Parser *p, TokenType ttype, InfixParseFn fn) {
+  p->infix_fns[ttype] = fn;
+}
+
+ExpressionStatement *parse_expression_statement(Parser *p, Arena *arena) {
+  Expression *expr = parse_expression(p);
+  if (p__peek_token_is(p, TOK_SEMICOLON)) { p__next_token(p); }
+
+  ExpressionStatement *expr_stmt = ast_expr_stmt_new(arena, p->current_token, expr);
+  return expr_stmt;
+}
+
+Expression *parse_expression(Parser *p) {
+  PrefixParseFn prefix = p->prefix_fns[p->current_token.type];
+  if (prefix == NULL) { return NULL; }
+
+  Expression *left_expression = prefix(p);
+  return left_expression;
 }
 
 ReturnStatement *parse_return_statement(Parser *p, Arena *arena) {
@@ -63,9 +101,9 @@ ReturnStatement *parse_return_statement(Parser *p, Arena *arena) {
   return_tok.literal = sv_from_cstr("return");
 
   // TODO: Expressions, skipping
-  p__next_token(p);
-
-  if (!p__peek_token_is(p, TOK_SEMICOLON)) { p__next_token(p); }
+  while (!p__current_token_is(p, TOK_SEMICOLON)) {
+    p__next_token(p);
+  }
 
   ReturnStatement *rtn_stmt = ast_return_new(arena, return_tok, NULL);
   return rtn_stmt;
@@ -91,9 +129,9 @@ LetStatement *parse_let_statement(Parser *p, Arena *arena) {
   if (!p__expect_peek(p, arena, TOK_ASSIGN)) { return NULL; }
 
   // TODO: Expressions, right now skipping
-  p__next_token(p);
-
-  if (!p__expect_peek(p, arena, TOK_SEMICOLON)) { p__next_token(p); }
+  while (!p__current_token_is(p, TOK_SEMICOLON)) {
+    p__next_token(p);
+  }
 
   LetStatement *let_stmt = ast_let_new(arena, let_tok, ident_name, NULL);
   return let_stmt;

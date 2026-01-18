@@ -35,6 +35,7 @@ void* arena_alloc(Arena* arena, size_t size, size_t align);
 /* Allocate and copy a string */
 char* arena_strdup(Arena* arena, const char* src, size_t len);
 
+/* Reset the memory map pointed by the arena */
 void arena_reset(Arena* arena);
 
 static inline size_t is_power_of_two(size_t x) {
