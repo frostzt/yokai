@@ -74,6 +74,8 @@ void register_infix(Parser *p, TokenType ttype, InfixParseFn fn) {
 
 ExpressionStatement *parse_expression_statement(Parser *p, Arena *arena) {
   Expression *expr = parse_expression(p);
+  if (expr == NULL) { return NULL; }
+
   if (p__peek_token_is(p, TOK_SEMICOLON)) { p__next_token(p); }
 
   ExpressionStatement *expr_stmt = ast_expr_stmt_new(arena, p->current_token, expr);
