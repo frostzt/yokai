@@ -18,7 +18,7 @@ struct Parser;
 /* Function that parses a prefix expression
  *      -21
  *      ^ -- prefix, "-21" is the expression */
-typedef Expression *(*PrefixParseFn)(struct Parser *);
+typedef Expression *(*PrefixParseFn)(struct Parser *, Arena *arena);
 
 /* Function that parses a infix expression
  *      2 + 2
@@ -105,6 +105,9 @@ void *parse_statement(Parser *p, Arena *arena);
 /* traverses the entire program */
 Program *parse_program(Parser *p, Arena *arena);
 
+/* parses an identifier expression */
+Expression* parse_identifier(Parser *p, Arena *arena);
+
 /*----------------------------------------------------------------
  *  Core expression parsing method
  *----------------------------------------------------------------*/
@@ -113,6 +116,6 @@ Program *parse_program(Parser *p, Arena *arena);
 Statement *parse_expression_statement(Parser *p, Arena *arena);
 
 /* parses an expression */
-Expression *parse_expression(Parser *p);
+Expression *parse_expression(Parser *p, Arena *arena);
 
 #endif // YOKAI_PARSER_H

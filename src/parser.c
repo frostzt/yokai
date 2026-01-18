@@ -37,7 +37,11 @@ void parser_init(Parser *p, Lexer *l, Arena *arena) {
   p->prec[TOK_LPAREN] = PREC_CALL;
 
   /* init prefix parsers */
-  // p->prefix_fns[TOK_IDENT] =
+  p->prefix_fns[TOK_IDENT] = parse_identifier;
+}
+
+Expression* parse_identifier(Parser *p, Arena *arena) {
+  return ast_expr_ident_new(arena, p->current_token, p->current_token.literal);
 }
 
 void parser_add_error(Parser *p, Arena *arena, const char *msg) {
@@ -73,7 +77,7 @@ void register_infix(Parser *p, TokenType ttype, InfixParseFn fn) {
 }
 
 Statement *parse_expression_statement(Parser *p, Arena *arena) {
-  Expression *expr = parse_expression(p);
+  Expression *expr = parse_expression(p, arena);
   if (expr == NULL) { return NULL; }
 
   if (p__peek_token_is(p, TOK_SEMICOLON)) { p__next_token(p); }
@@ -82,11 +86,11 @@ Statement *parse_expression_statement(Parser *p, Arena *arena) {
   return expr_stmt;
 }
 
-Expression *parse_expression(Parser *p) {
+Expression *parse_expression(Parser *p, Arena *arena) {
   PrefixParseFn prefix = p->prefix_fns[p->current_token.type];
   if (prefix == NULL) { return NULL; }
 
-  Expression *left_expression = prefix(p);
+  Expression *left_expression = prefix(p, arena);
   return left_expression;
 }
 
