@@ -40,10 +40,6 @@ void parser_init(Parser *p, Lexer *l, Arena *arena) {
   // p->prefix_fns[TOK_IDENT] =
 }
 
-// Expression *parse_identifier(Parser *p, Arena *arena) {
-//   Identifier *ident = ast_ident_new(arena, p->current_token, p->current_token.literal);
-// }
-
 void parser_add_error(Parser *p, Arena *arena, const char *msg) {
   if (p->error_count == p->error_cap) {
     size_t new_cap = p->error_cap * 2;

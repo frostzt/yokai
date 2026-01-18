@@ -4,14 +4,17 @@ project(yokai_c LANGUAGES C)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
+# Set to debug build
+set(CMAKE_BUILD_TYPE Debug)
+
 add_compile_options(
     -Wall -Wextra -Werror -Wpedantic
     -O0 -g
 )
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
-    add_link_options(-fsanitize=address,undefined)
+  add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
+  add_link_options(-fsanitize=address,undefined)
 endif()
 
 # -----------------------------

@@ -45,6 +45,7 @@ void skip_whitespace(Lexer *lexer) {
 NumberLex read_number(Lexer *lexer) {
   NumberLex lexed;
   lexed.is_float = false;
+  lexed.is_invalid = false;
   size_t pos = lexer->position;
 
   size_t dot_counter = 0;

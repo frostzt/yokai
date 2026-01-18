@@ -1,4 +1,6 @@
+#include <stdalign.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "test.h"
@@ -69,6 +71,7 @@ TEST(ast_to_string) {
   LetStatement *let_stmt = ast_let_new(&arena, let_tok, ident, (Expression *)another_ident);
 
   prog->statements[0] = (Statement *)let_stmt;
+  prog->stmt_count = 1;
 
   /* create a new string buffer */
   StrBuf str_buf;
@@ -77,4 +80,7 @@ TEST(ast_to_string) {
 
   /* convert the program into a string */
   ast__prog_to_string(prog, &str_buf);
+
+  StrView prog_sv = sb__view(&str_buf);
+  sv_eq_cstr(prog_sv, "let my_var = another_var;");
 }
