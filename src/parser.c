@@ -44,6 +44,8 @@ void parser_init(Parser *p, Lexer *l, Arena *arena) {
   register_prefix(p, TOK_IDENT, parse_identifier);
   register_prefix(p, TOK_INT, parse_integer_literal);
   register_prefix(p, TOK_FLOAT, parse_float_literal);
+  register_prefix(p, TOK_BANG, parse_prefix_expression);
+  register_prefix(p, TOK_MINUS, parse_prefix_expression);
 }
 
 Expression *parse_float_literal(Parser *p, Arena *arena) {
@@ -134,10 +136,34 @@ Statement *parse_expression_statement(Parser *p, Arena *arena) {
 
 Expression *parse_expression(Parser *p, Arena *arena) {
   PrefixParseFn prefix = p->prefix_fns[p->current_token.type];
-  if (prefix == NULL) { return NULL; }
+  if (prefix == NULL) {
+    no_prefix_parse_fn_error(p, arena, p->current_token.type);
+    return NULL;
+  }
 
   Expression *left_expression = prefix(p, arena);
   return left_expression;
+}
+
+Expression *parse_prefix_expression(Parser *p, Arena *arena) {
+  Token current_token = p->current_token;
+  /* advance the token to get the next value */
+  p__next_token(p);
+  Expression *right_expr = parse_expression(p, arena);
+  /* note its `current_token` copied above NOT p->current_token */
+  Expression *expr = ast_expr_prefix_new(arena, current_token, right_expr);
+  return expr;
+}
+
+void no_prefix_parse_fn_error(Parser *p, Arena *arena, TokenType tt) {
+  StrBuf str_buf;
+  sb__init(&str_buf, 32);
+
+  sb__append_cstr(&str_buf, "no prefix function for '");
+  sb__append_cstr(&str_buf, token_type_name(tt));
+  sb__append_cstr(&str_buf, "' found");
+
+  parser_add_error(p, arena, sb__cstr(&str_buf));
 }
 
 Statement *parse_return_statement(Parser *p, Arena *arena) {

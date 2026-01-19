@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "test.h"
+#include "yokai/arena.h"
 #include "yokai/ast.h"
 #include "yokai/lexer.h"
 #include "yokai/parser.h"
@@ -19,6 +20,12 @@ bool test_let_statement(Statement *stmt, char *name) {
 
   ASSERT(strcmp(stmt->as.stmt_let.name->as.expr_ident.value.data, name),
          "expected name does not match");
+  return true;
+}
+
+bool test_integer_literal(Expression *expr, int64_t value) {
+  ASSERT_EQ(expr->kind, EXPR_INT, "expr is not an integer literal expression");
+  ASSERT_EQ(expr->as.expr_int_literal.value, value, "integer value mismatch");
   return true;
 }
 
@@ -170,4 +177,42 @@ TEST(parser__float_literal_expression) {
   ASSERT_EQ(stmt->as.stmt_expr.expr->kind, EXPR_FLOAT, "statement expression not a float kind");
   ASSERT_EQ(stmt->as.stmt_expr.expr->as.expr_float_literal.value, 52.64, "literal value not 52.64");
   ASSERT(sv_eq_cstr(stmt->as.stmt_expr.expr->token.literal, "52.64"), "literal not 52.64");
+}
+
+TEST(parser__parsing_prefix_expression) {
+  Arena arena = arena_create(128);
+
+  struct PrefixTest {
+    char *input;
+    char *operator;
+    int64_t integer_value;
+  };
+
+  struct PrefixTest tests[] = {
+      {.input = "!5", .operator = "!", .integer_value = 5},
+      {.input = "-15", .operator = "-", .integer_value = 15},
+  };
+
+  size_t length = sizeof(tests) / sizeof(tests[0]);
+  for (size_t i = 0; i < length; i++) {
+    /* construct the logic out of current case's input */
+    struct PrefixTest current_case = tests[i];
+    StrView input = {.data = current_case.input, .len = strlen(current_case.input)};
+    Lexer lexer = {.input = input, .position = 0, .read_position = 0, .ch = 0};
+    read_char(&lexer);
+    Parser parser = {.lexer = &lexer};
+    parser_init(&parser, &lexer, &arena);
+    Program *program = parse_program(&parser, &arena);
+    check_parser_errors(&parser);
+
+    ASSERT_NOT_NULL(program, "parse_program returned NULL");
+    ASSERT_EQ(program->stmt_count, 1, "program statements does not contain 1 statement");
+
+    Statement *stmt = program->statements[0];
+    ASSERT_EQ(stmt->kind, STMT_EXPR, "not an expression statement");
+    Expression *stmt_expr = stmt->as.stmt_expr.expr;
+    ASSERT_EQ(stmt_expr->kind, EXPR_PREFIX, "stmt expression not prefix expression");
+    ASSERT(sv_eq_cstr(stmt_expr->as.expr_prefix.op, current_case.operator), "operator mismatch");
+    ASSERT(test_integer_literal(stmt_expr->as.expr_prefix.right, current_case.integer_value), "invalid integer literal value");
+  }
 }

@@ -37,8 +37,8 @@ typedef struct Expression {
     struct { StrView value; } expr_ident;
     struct { int64_t value; } expr_int_literal;
     struct { double value; } expr_float_literal;
-    struct { Token op; struct Expression* right; } expr_prefix;
-    struct { struct Expression* left; Token op; struct Expression* right; } expr_infix;
+    struct { StrView op; struct Expression* right; } expr_prefix;
+    struct { struct Expression* left; StrView op; struct Expression* right; } expr_infix;
   } as;
   /* clang-format on */
 } Expression;
@@ -108,5 +108,8 @@ Expression *ast_expr_int_new(Arena *arena, Token token, int64_t value);
 
 /* Allocates a new FloatLiteral using the arena allocator */
 Expression *ast_expr_float_new(Arena *arena, Token token, double value);
+
+/* Allocates a new Prefix expression using the arena allocator */
+Expression *ast_expr_prefix_new(Arena *arena, Token operator, Expression *expr);
 
 #endif // YOKAI_AST_H

@@ -74,6 +74,9 @@ bool p__expect_peek(Parser *p, Arena *arena, TokenType ttype);
 /* adds a new error to the parser's errors array, handles alloc */
 void parser_add_error(Parser *p, Arena *arena, const char *);
 
+/* add an error for no parsing function found for a token type */
+void no_prefix_parse_fn_error(Parser *p, Arena *arena, TokenType tt);
+
 /* adds error to the parser by checking and matching the peek token with the exepcted token */
 void p__peek_error(Parser *p, Arena *arena, TokenType ttype);
 
@@ -123,5 +126,8 @@ Statement *parse_expression_statement(Parser *p, Arena *arena);
 
 /* parses an expression */
 Expression *parse_expression(Parser *p, Arena *arena);
+
+/* parses an prefix expression */
+Expression *parse_prefix_expression(Parser *p, Arena *arena);
 
 #endif // YOKAI_PARSER_H

@@ -139,6 +139,15 @@ Statement *ast_expr_stmt_new(Arena *arena, Token token, Expression *value) {
   return expr_stmt;
 }
 
+Expression *ast_expr_prefix_new(Arena *arena, Token operator, Expression *expr) {
+  Expression *prefix_expr = arena_alloc(arena, sizeof(Expression), alignof(Expression));
+  prefix_expr->token = operator; /* operator */
+  prefix_expr->kind = EXPR_PREFIX;
+  prefix_expr->as.expr_prefix.right = expr;
+  prefix_expr->as.expr_prefix.op = operator.literal;
+  return prefix_expr;
+}
+
 Expression *ast_expr_ident_new(Arena *arena, Token token, StrView value) {
   Expression *ident = arena_alloc(arena, sizeof(Expression), alignof(Expression));
   ident->token = token;
