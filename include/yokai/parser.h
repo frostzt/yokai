@@ -111,6 +111,9 @@ Expression *parse_identifier(Parser *p, Arena *arena);
 /* parses an integer literal */
 Expression *parse_integer_literal(Parser *p, Arena *arena);
 
+/* parses an float literal */
+Expression *parse_float_literal(Parser *p, Arena *arena);
+
 /*----------------------------------------------------------------
  *  Core expression parsing method
  *----------------------------------------------------------------*/

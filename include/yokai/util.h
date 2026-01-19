@@ -19,3 +19,6 @@ size_t max(size_t a, size_t b);
 
 /* parses a string view into int64 */
 bool safe_parse_int64_sv(const StrView *sv, int64_t *out);
+
+/* parses a string view into double */
+bool safe_parse_double_sv(const StrView *sv, double *out);

@@ -146,3 +146,28 @@ TEST(parser__integer_literal_expression) {
   ASSERT_EQ(stmt->as.stmt_expr.expr->as.expr_int_literal.value, 52, "literal value not 52");
   ASSERT(sv_eq_cstr(stmt->as.stmt_expr.expr->token.literal, "52"), "literal not 52");
 }
+
+TEST(parser__float_literal_expression) {
+  Arena arena = arena_create(128);
+
+  const char *input_raw = "52.64;";
+
+  /* setup parser */
+  StrView input = {.data = input_raw, .len = strlen(input_raw)};
+  Lexer lexer = {.input = input, .position = 0, .read_position = 0, .ch = 0};
+  read_char(&lexer);
+  Parser parser = {.lexer = &lexer};
+  parser_init(&parser, &lexer, &arena);
+  Program *program = parse_program(&parser, &arena);
+  check_parser_errors(&parser);
+
+  ASSERT_NOT_NULL(program, "parse_program returned NULL");
+  ASSERT_EQ(program->stmt_count, 1, "program statements does not contain 1 statement");
+
+  Statement *stmt = program->statements[0];
+  ASSERT_EQ(stmt->kind, STMT_EXPR, "statement is not an expression statement");
+
+  ASSERT_EQ(stmt->as.stmt_expr.expr->kind, EXPR_FLOAT, "statement expression not a float kind");
+  ASSERT_EQ(stmt->as.stmt_expr.expr->as.expr_float_literal.value, 52.64, "literal value not 52.64");
+  ASSERT(sv_eq_cstr(stmt->as.stmt_expr.expr->token.literal, "52.64"), "literal not 52.64");
+}
