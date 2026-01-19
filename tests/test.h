@@ -27,9 +27,14 @@ static int tests_passed = 0;
     }                                                                                              \
   } while (0)
 
-#define ASSERT_NE(a, b) ASSERT((a) != (b))
-#define ASSERT_NULL(ptr) ASSERT((ptr) == NULL)
-#define ASSERT_STR_EQ(a, b) ASSERT(strcmp((a), (b)) == 0)
+#define ASSERT_STR_EQ(a, b, msg)                                                                   \
+  do {                                                                                             \
+    if (strcmp(a, b) != 0) {                                                                      \
+      fprintf(stderr, "ASSERTION FAILED: %s\n", msg);                                              \
+      fprintf(stderr, "  at %s:%d in %s\n", __FILE__, __LINE__, __func__);                         \
+      exit(1);                                                                                     \
+    }                                                                                              \
+  } while (0)
 
 #define ASSERT_EQ(a, b, msg)                                                                       \
   do {                                                                                             \

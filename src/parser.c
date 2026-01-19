@@ -5,15 +5,19 @@
  * Date: 2026-01-05
  */
 
+#include <errno.h>
 #include <stdalign.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "yokai/arena.h"
 #include "yokai/ast.h"
 #include "yokai/lexer.h"
 #include "yokai/parser.h"
+#include "yokai/str.h"
 #include "yokai/token.h"
+#include "yokai/util.h"
 
 void p__next_token(Parser *p) {
   p->current_token = p->peek_token;
@@ -37,10 +41,31 @@ void parser_init(Parser *p, Lexer *l, Arena *arena) {
   p->prec[TOK_LPAREN] = PREC_CALL;
 
   /* init prefix parsers */
-  p->prefix_fns[TOK_IDENT] = parse_identifier;
+  register_prefix(p, TOK_IDENT, parse_identifier);
+  register_prefix(p, TOK_INT, parse_integer_literal);
 }
 
-Expression* parse_identifier(Parser *p, Arena *arena) {
+Expression *parse_integer_literal(Parser *p, Arena *arena) {
+  int64_t value;
+  if (!safe_parse_int64_sv(&p->current_token.literal, &value)) {
+    StrBuf str_buf;
+    str_buf.arena = arena;
+    sb__init(&str_buf, 32);
+
+    sb__append_cstr(&str_buf, "could not parse '");
+    sb__append_cstr(&str_buf, p->current_token.literal.data);
+    sb__append_cstr(&str_buf, "' as integer");
+
+    parser_add_error(p, arena, sb__cstr(&str_buf));
+    return NULL;
+  }
+
+  /* use the parsed value and token to create a new integer literal */
+  Expression *int_literal = ast_expr_int_new(arena, p->current_token, value);
+  return int_literal;
+}
+
+Expression *parse_identifier(Parser *p, Arena *arena) {
   return ast_expr_ident_new(arena, p->current_token, p->current_token.literal);
 }
 
