@@ -148,6 +148,17 @@ Expression *ast_expr_prefix_new(Arena *arena, Token operator, Expression *expr) 
   return prefix_expr;
 }
 
+Expression *ast_expr_infix_new(Arena *arena, Token operator, Expression *left_expr,
+                               Expression *right_expr) {
+  Expression *infix_expr = arena_alloc(arena, sizeof(Expression), alignof(Expression));
+  infix_expr->token = operator; /* operator */
+  infix_expr->kind = EXPR_INFIX;
+  infix_expr->as.expr_infix.left = left_expr;
+  infix_expr->as.expr_infix.op = operator.literal;
+  infix_expr->as.expr_infix.right = right_expr;
+  return infix_expr;
+}
+
 Expression *ast_expr_ident_new(Arena *arena, Token token, StrView value) {
   Expression *ident = arena_alloc(arena, sizeof(Expression), alignof(Expression));
   ident->token = token;

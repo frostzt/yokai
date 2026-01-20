@@ -23,7 +23,7 @@ typedef Expression *(*PrefixParseFn)(struct Parser *, Arena *arena);
 /* Function that parses a infix expression
  *      2 + 2
  *        ^ -- infix, "2 + 2" is the expression */
-typedef Expression *(*InfixParseFn)(struct Parser *, Expression *left);
+typedef Expression *(*InfixParseFn)(struct Parser *, Arena *arena, Expression *left);
 
 /* Precedence of each operator in the Yokai Language */
 typedef enum {
@@ -70,6 +70,15 @@ bool p__expect_peek(Parser *p, Arena *arena, TokenType ttype);
 /*----------------------------------------------------------------
  *  Helpers
  *----------------------------------------------------------------*/
+
+/* returns precedence for a token type */
+Precedence token_type_precedence(TokenType ttype);
+
+/* returns precedence for the currently peeked token */
+Precedence p__peek_precedence(Parser *p);
+
+/* returns precedence for the current token */
+Precedence p__current_precedence(Parser *p);
 
 /* adds a new error to the parser's errors array, handles alloc */
 void parser_add_error(Parser *p, Arena *arena, const char *);
@@ -125,9 +134,12 @@ Expression *parse_float_literal(Parser *p, Arena *arena);
 Statement *parse_expression_statement(Parser *p, Arena *arena);
 
 /* parses an expression */
-Expression *parse_expression(Parser *p, Arena *arena);
+Expression *parse_expression(Parser *p, Arena *arena, Precedence precedence);
 
 /* parses an prefix expression */
 Expression *parse_prefix_expression(Parser *p, Arena *arena);
+
+/* parses an infix expression */
+Expression *parse_infix_expression(Parser *p, Arena *arena, Expression *left);
 
 #endif // YOKAI_PARSER_H

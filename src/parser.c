@@ -46,6 +46,47 @@ void parser_init(Parser *p, Lexer *l, Arena *arena) {
   register_prefix(p, TOK_FLOAT, parse_float_literal);
   register_prefix(p, TOK_BANG, parse_prefix_expression);
   register_prefix(p, TOK_MINUS, parse_prefix_expression);
+
+  /* init infix parsers */
+  register_infix(p, TOK_PLUS, parse_infix_expression);
+  register_infix(p, TOK_MINUS, parse_infix_expression);
+  register_infix(p, TOK_SLASH, parse_infix_expression);
+  register_infix(p, TOK_ASTERISK, parse_infix_expression);
+  register_infix(p, TOK_EQ, parse_infix_expression);
+  register_infix(p, TOK_NOT_EQ, parse_infix_expression);
+  register_infix(p, TOK_LT, parse_infix_expression);
+  register_infix(p, TOK_GT, parse_infix_expression);
+}
+
+Precedence token_type_precedence(TokenType ttype) {
+  switch (ttype) {
+  case TOK_EQ:
+  case TOK_NOT_EQ:
+    return PREC_EQUALS;
+
+  case TOK_LT:
+  case TOK_GT:
+    return PREC_LESSGREATER;
+
+  case TOK_PLUS:
+  case TOK_MINUS:
+    return PREC_SUM;
+
+  case TOK_SLASH:
+  case TOK_ASTERISK:
+    return PREC_PRODUCT;
+
+  default:
+    return PREC_LOWEST;
+  }
+}
+
+Precedence p__peek_precedence(Parser *p) {
+  return token_type_precedence(p->peek_token.type);
+}
+
+Precedence p__current_precedence(Parser *p) {
+  return token_type_precedence(p->current_token.type);
 }
 
 Expression *parse_float_literal(Parser *p, Arena *arena) {
@@ -125,7 +166,7 @@ void register_infix(Parser *p, TokenType ttype, InfixParseFn fn) {
 }
 
 Statement *parse_expression_statement(Parser *p, Arena *arena) {
-  Expression *expr = parse_expression(p, arena);
+  Expression *expr = parse_expression(p, arena, PREC_LOWEST);
   if (expr == NULL) { return NULL; }
 
   if (p__peek_token_is(p, TOK_SEMICOLON)) { p__next_token(p); }
@@ -134,14 +175,22 @@ Statement *parse_expression_statement(Parser *p, Arena *arena) {
   return expr_stmt;
 }
 
-Expression *parse_expression(Parser *p, Arena *arena) {
+Expression *parse_expression(Parser *p, Arena *arena, Precedence precedence) {
   PrefixParseFn prefix = p->prefix_fns[p->current_token.type];
   if (prefix == NULL) {
     no_prefix_parse_fn_error(p, arena, p->current_token.type);
     return NULL;
   }
-
   Expression *left_expression = prefix(p, arena);
+
+  while (!p__peek_token_is(p, TOK_SEMICOLON) && precedence < p__peek_precedence(p)) {
+    InfixParseFn infix = p->infix_fns[p->peek_token.type];
+    if (infix == NULL) { return left_expression; }
+
+    p__next_token(p);
+    left_expression = infix(p, arena, left_expression);
+  }
+
   return left_expression;
 }
 
@@ -149,9 +198,19 @@ Expression *parse_prefix_expression(Parser *p, Arena *arena) {
   Token current_token = p->current_token;
   /* advance the token to get the next value */
   p__next_token(p);
-  Expression *right_expr = parse_expression(p, arena);
+  Expression *right_expr = parse_expression(p, arena, PREC_LOWEST);
   /* note its `current_token` copied above NOT p->current_token */
   Expression *expr = ast_expr_prefix_new(arena, current_token, right_expr);
+  return expr;
+}
+
+Expression *parse_infix_expression(Parser *p, Arena *arena, Expression *left_expr) {
+  Token current_token = p->current_token;
+  Precedence precedence = p__current_precedence(p);
+  /* advance the token to get the next value */
+  p__next_token(p);
+  Expression *right_expr = parse_expression(p, arena, precedence);
+  Expression *expr = ast_expr_infix_new(arena, current_token, left_expr, right_expr);
   return expr;
 }
 

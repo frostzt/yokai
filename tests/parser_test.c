@@ -213,6 +213,55 @@ TEST(parser__parsing_prefix_expression) {
     Expression *stmt_expr = stmt->as.stmt_expr.expr;
     ASSERT_EQ(stmt_expr->kind, EXPR_PREFIX, "stmt expression not prefix expression");
     ASSERT(sv_eq_cstr(stmt_expr->as.expr_prefix.op, current_case.operator), "operator mismatch");
-    ASSERT(test_integer_literal(stmt_expr->as.expr_prefix.right, current_case.integer_value), "invalid integer literal value");
+    ASSERT(test_integer_literal(stmt_expr->as.expr_prefix.right, current_case.integer_value),
+           "invalid integer literal value");
+  }
+}
+
+TEST(parser__parsing_infix_expression) {
+  Arena arena = arena_create(128);
+
+  struct PrefixTest {
+    char *input;
+    int64_t left_value;
+    char *operator;
+    int64_t right_value;
+  };
+
+  struct PrefixTest tests[] = {
+      {.input = "5 + 5", .operator = "+", .left_value = 5, .right_value = 5},
+      {.input = "5 - 5", .operator = "-", .left_value = 5, .right_value = 5},
+      {.input = "5 * 5", .operator = "*", .left_value = 5, .right_value = 5},
+      {.input = "5 / 5", .operator = "/", .left_value = 5, .right_value = 5},
+      {.input = "5 > 5", .operator = ">", .left_value = 5, .right_value = 5},
+      {.input = "5 < 5", .operator = "<", .left_value = 5, .right_value = 5},
+      {.input = "5 == 5", .operator = "==", .left_value = 5, .right_value = 5},
+      {.input = "5 != 5", .operator = "!=", .left_value = 5, .right_value = 5},
+  };
+
+  size_t length = sizeof(tests) / sizeof(tests[0]);
+  for (size_t i = 0; i < length; i++) {
+    /* construct the logic out of current case's input */
+    struct PrefixTest current_case = tests[i];
+    StrView input = {.data = current_case.input, .len = strlen(current_case.input)};
+    Lexer lexer = {.input = input, .position = 0, .read_position = 0, .ch = 0};
+    read_char(&lexer);
+    Parser parser = {.lexer = &lexer};
+    parser_init(&parser, &lexer, &arena);
+    Program *program = parse_program(&parser, &arena);
+    check_parser_errors(&parser);
+
+    ASSERT_NOT_NULL(program, "parse_program returned NULL");
+    ASSERT_EQ(program->stmt_count, 1, "program statements does not contain 1 statement");
+
+    Statement *stmt = program->statements[0];
+    ASSERT_EQ(stmt->kind, STMT_EXPR, "not an expression statement");
+    Expression *stmt_expr = stmt->as.stmt_expr.expr;
+    ASSERT_EQ(stmt_expr->kind, EXPR_INFIX, "stmt expression not infix expression");
+    ASSERT(test_integer_literal(stmt_expr->as.expr_infix.left, current_case.left_value),
+           "invalid left value");
+    ASSERT(sv_eq_cstr(stmt_expr->as.expr_infix.op, current_case.operator), "operator mismatch");
+    ASSERT(test_integer_literal(stmt_expr->as.expr_infix.right, current_case.right_value),
+           "invalid right value");
   }
 }

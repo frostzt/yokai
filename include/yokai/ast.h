@@ -109,7 +109,11 @@ Expression *ast_expr_int_new(Arena *arena, Token token, int64_t value);
 /* Allocates a new FloatLiteral using the arena allocator */
 Expression *ast_expr_float_new(Arena *arena, Token token, double value);
 
+/* Allocates a new Infix expression using the arena allocator */
+Expression *ast_expr_infix_new(Arena *arena, Token operator, Expression * left_expr,
+                               Expression *right_expr);
+
 /* Allocates a new Prefix expression using the arena allocator */
-Expression *ast_expr_prefix_new(Arena *arena, Token operator, Expression *expr);
+Expression *ast_expr_prefix_new(Arena *arena, Token operator, Expression * expr);
 
 #endif // YOKAI_AST_H
