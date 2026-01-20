@@ -221,14 +221,14 @@ TEST(parser__parsing_prefix_expression) {
 TEST(parser__parsing_infix_expression) {
   Arena arena = arena_create(128);
 
-  struct PrefixTest {
+  struct InfixTest {
     char *input;
     int64_t left_value;
     char *operator;
     int64_t right_value;
   };
 
-  struct PrefixTest tests[] = {
+  struct InfixTest tests[] = {
       {.input = "5 + 5", .operator = "+", .left_value = 5, .right_value = 5},
       {.input = "5 - 5", .operator = "-", .left_value = 5, .right_value = 5},
       {.input = "5 * 5", .operator = "*", .left_value = 5, .right_value = 5},
@@ -242,7 +242,7 @@ TEST(parser__parsing_infix_expression) {
   size_t length = sizeof(tests) / sizeof(tests[0]);
   for (size_t i = 0; i < length; i++) {
     /* construct the logic out of current case's input */
-    struct PrefixTest current_case = tests[i];
+    struct InfixTest current_case = tests[i];
     StrView input = {.data = current_case.input, .len = strlen(current_case.input)};
     Lexer lexer = {.input = input, .position = 0, .read_position = 0, .ch = 0};
     read_char(&lexer);
@@ -263,5 +263,91 @@ TEST(parser__parsing_infix_expression) {
     ASSERT(sv_eq_cstr(stmt_expr->as.expr_infix.op, current_case.operator), "operator mismatch");
     ASSERT(test_integer_literal(stmt_expr->as.expr_infix.right, current_case.right_value),
            "invalid right value");
+  }
+}
+
+TEST(parser__parsing_complex_expressions) {
+  Arena arena = arena_create(128);
+
+  struct ComplexExpressionTest {
+    char *input;
+    char *output;
+  };
+
+  struct ComplexExpressionTest tests[] = {
+      {.input = "-a * b", .output = "((-a) * b)"},
+      {
+          .input = "!-a",
+          .output = "(!(-a))",
+      },
+      {
+          .input = "a + b + c",
+          .output = "((a + b) + c)",
+      },
+      {
+          .input = "a + b - c",
+          .output = "((a + b) - c)",
+      },
+      {
+          .input = "a * b * c",
+          .output = "((a * b) * c)",
+      },
+      {
+          .input = "a * b / c",
+          .output = "((a * b) / c)",
+      },
+      {
+          .input = "a + b / c",
+          .output = "(a + (b / c))",
+      },
+      {
+          .input = "a + b * c + d / e - f",
+          .output = "(((a + (b * c)) + (d / e)) - f)",
+      },
+      {
+          .input = "3 + 4; -5 * 5",
+          .output = "(3 + 4)((-5) * 5)",
+      },
+      {
+          .input = "5 > 4 == 3 < 4",
+          .output = "((5 > 4) == (3 < 4))",
+      },
+      {
+          .input = "5 < 4 != 3 > 4",
+          .output = "((5 < 4) != (3 > 4))",
+      },
+      {
+          .input = "3 + 4 * 5 == 3 * 1 + 4 * 5",
+          .output = "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
+      },
+      {
+          .input = "3 + 4 * 5 == 3 * 1 + 4 * 5",
+          .output = "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
+      },
+  };
+
+  size_t length = sizeof(tests) / sizeof(tests[0]);
+  for (size_t i = 0; i < length; i++) {
+    struct ComplexExpressionTest current_case = tests[i];
+    StrView input = {.data = current_case.input, .len = strlen(current_case.input)};
+    Lexer lexer = {.input = input, .position = 0, .read_position = 0, .ch = 0};
+    read_char(&lexer);
+    Parser parser = {.lexer = &lexer};
+    parser_init(&parser, &lexer, &arena);
+    Program *program = parse_program(&parser, &arena);
+    check_parser_errors(&parser);
+
+    ASSERT_NOT_NULL(program, "parse_program returned NULL");
+
+    /* for program string */
+    StrBuf strbuf;
+    strbuf.arena = &arena;
+    sb__init(&strbuf, 32);
+
+    /* convert the entire program to string */
+    ast__prog_to_string(program, &strbuf);
+
+    const char *actual = sb__cstr(&strbuf);
+    ASSERT(strcmp(current_case.output, actual) == 0, "program string mismatch");
   }
 }

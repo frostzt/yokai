@@ -53,7 +53,6 @@ void ast__stmt_to_string(const Statement *stmt, StrBuf *str_buf) {
 
   case STMT_EXPR: {
     if (stmt->as.stmt_expr.expr) { ast__expr_to_string(stmt->as.stmt_expr.expr, str_buf); }
-    sb__append_cstr(str_buf, ";");
     break;
   };
   }
@@ -77,9 +76,23 @@ void ast__expr_to_string(const Expression *expr, StrBuf *str_buf) {
     sb__append(str_buf, buf, n);
     break;
   }
-  case EXPR_PREFIX:
-  case EXPR_INFIX:
+  case EXPR_PREFIX: {
+    sb__append_cstr(str_buf, "(");
+    sb__append_strview(str_buf, expr->as.expr_prefix.op);
+    ast__expr_to_string(expr->as.expr_prefix.right, str_buf);
+    sb__append_cstr(str_buf, ")");
     break;
+  }
+  case EXPR_INFIX: {
+    sb__append_cstr(str_buf, "(");
+    ast__expr_to_string(expr->as.expr_infix.left, str_buf);
+    sb__append_cstr(str_buf, " ");
+    sb__append_strview(str_buf, expr->as.expr_infix.op);
+    sb__append_cstr(str_buf, " ");
+    ast__expr_to_string(expr->as.expr_infix.right, str_buf);
+    sb__append_cstr(str_buf, ")");
+    break;
+  }
   }
 }
 
