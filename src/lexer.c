@@ -142,11 +142,12 @@ Token next_token(Lexer *lexer) {
 
   case '!': {
     char nextPeekedChar = peek_char(lexer);
+    size_t start_pos = lexer->position;
     if (nextPeekedChar == '=') {
       read_char(lexer);
-      token = token_make(TOK_NOT_EQ, lexer->input.data + lexer->position, 2);
+      token = token_make(TOK_NOT_EQ, lexer->input.data + start_pos, 2);
     } else {
-      token = token_make(TOK_BANG, lexer->input.data + lexer->position, 1);
+      token = token_make(TOK_BANG, lexer->input.data + start_pos, 1);
     }
 
     break;
@@ -154,11 +155,12 @@ Token next_token(Lexer *lexer) {
 
   case '=': {
     char nextPeekedChar = peek_char(lexer);
+    size_t start_pos = lexer->position;
     if (nextPeekedChar == '=') {
       read_char(lexer);
-      token = token_make(TOK_EQ, lexer->input.data + lexer->position, 2);
+      token = token_make(TOK_EQ, lexer->input.data + start_pos, 2);
     } else {
-      token = token_make(TOK_ASSIGN, lexer->input.data + lexer->position, 1);
+      token = token_make(TOK_ASSIGN, lexer->input.data + start_pos, 1);
     }
 
     break;
