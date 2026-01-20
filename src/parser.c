@@ -183,11 +183,13 @@ Expression *parse_expression(Parser *p, Arena *arena, Precedence precedence) {
   }
   Expression *left_expression = prefix(p, arena);
 
+  /* try and find an infix parsing function for the next token */
   while (!p__peek_token_is(p, TOK_SEMICOLON) && precedence < p__peek_precedence(p)) {
     InfixParseFn infix = p->infix_fns[p->peek_token.type];
     if (infix == NULL) { return left_expression; }
 
     p__next_token(p);
+    /* this keeps resolving the left, the infix function will call for the right */
     left_expression = infix(p, arena, left_expression);
   }
 
@@ -198,7 +200,7 @@ Expression *parse_prefix_expression(Parser *p, Arena *arena) {
   Token current_token = p->current_token;
   /* advance the token to get the next value */
   p__next_token(p);
-  Expression *right_expr = parse_expression(p, arena, PREC_LOWEST);
+  Expression *right_expr = parse_expression(p, arena, PREC_PREFIX);
   /* note its `current_token` copied above NOT p->current_token */
   Expression *expr = ast_expr_prefix_new(arena, current_token, right_expr);
   return expr;
