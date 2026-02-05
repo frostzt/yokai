@@ -23,6 +23,7 @@ endif()
 add_library(yokai_core STATIC
   src/arena.c
   src/ast.c
+  src/debug.c
   src/lexer.c
   src/parser.c
   src/repl.c

@@ -1,4 +1,3 @@
-#include <_abort.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -6,6 +5,7 @@
 #include "test.h"
 #include "yokai/arena.h"
 #include "yokai/ast.h"
+#include "yokai/debug.h"
 #include "yokai/lexer.h"
 #include "yokai/parser.h"
 #include "yokai/str.h"
@@ -26,6 +26,38 @@ bool test_let_statement(Statement *stmt, char *name) {
 bool test_integer_literal(Expression *expr, int64_t value) {
   ASSERT_EQ(expr->kind, EXPR_INT, "expr is not an integer literal expression");
   ASSERT_EQ(expr->as.expr_int_literal.value, value, "integer value mismatch");
+  return true;
+}
+
+bool test_identifier_literal(Expression *expr, char *value) {
+  ASSERT_EQ(expr->kind, EXPR_IDENT, "expr is not of identifier kind");
+  ASSERT(sv_eq_cstr(expr->as.expr_ident.value, value), "value mismatch");
+  return true;
+}
+
+bool test_literal_expression(Expression *expr, void *expected) {
+  switch (expr->kind) {
+  case EXPR_INT: {
+    int64_t value = *(int64_t *)expected;
+    return test_integer_literal(expr, value);
+  }
+  case EXPR_IDENT: {
+    return test_identifier_literal(expr, expected);
+  }
+  default: {
+    DEBUG_ERROR("Type received is out of scope");
+    return false;
+  }
+  }
+}
+
+bool test_infix_expression(Expression *infix_expr, void *left, char *operator, void *right) {
+  ASSERT_EQ(infix_expr->kind, EXPR_INFIX, "expression kind mismatch");
+  ASSERT(test_literal_expression(infix_expr->as.expr_infix.left, left),
+         "mismatched left expression types");
+  ASSERT(sv_eq_cstr(infix_expr->as.expr_infix.op, operator), "mismatched op types");
+  ASSERT(test_literal_expression(infix_expr->as.expr_infix.right, right),
+         "mismatched right expression types");
   return true;
 }
 
@@ -257,12 +289,9 @@ TEST(parser__parsing_infix_expression) {
     Statement *stmt = program->statements[0];
     ASSERT_EQ(stmt->kind, STMT_EXPR, "not an expression statement");
     Expression *stmt_expr = stmt->as.stmt_expr.expr;
-    ASSERT_EQ(stmt_expr->kind, EXPR_INFIX, "stmt expression not infix expression");
-    ASSERT(test_integer_literal(stmt_expr->as.expr_infix.left, current_case.left_value),
-           "invalid left value");
-    ASSERT(sv_eq_cstr(stmt_expr->as.expr_infix.op, current_case.operator), "operator mismatch");
-    ASSERT(test_integer_literal(stmt_expr->as.expr_infix.right, current_case.right_value),
-           "invalid right value");
+    ASSERT(test_infix_expression(stmt_expr, &current_case.left_value, current_case.operator,
+                                 &current_case.right_value),
+           "failed to test infix expression");
   }
 }
 
