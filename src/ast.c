@@ -4,13 +4,8 @@
  * Author: frostzt
  * Date: 2026-01-06
  */
-
-#include <stdalign.h>
-#include <stdio.h>
-#include <string.h>
-
-#include "yokai/arena.h"
 #include "yokai/ast.h"
+#include "yokai/arena.h"
 
 const char *stmt_token_literal(const Statement *s) {
   switch (s->kind) {
@@ -90,6 +85,12 @@ void ast__expr_to_string(const Expression *expr, StrBuf *str_buf) {
     sb__append_strview(str_buf, expr->as.expr_infix.op);
     sb__append_cstr(str_buf, " ");
     ast__expr_to_string(expr->as.expr_infix.right, str_buf);
+    sb__append_cstr(str_buf, ")");
+    break;
+  }
+  case EXPR_BOOLEAN: {
+    sb__append_cstr(str_buf, "(");
+    sb__append_cstr(str_buf, expr->as.expr_bool_literal.value ? "true" : "false");
     sb__append_cstr(str_buf, ")");
     break;
   }
@@ -186,6 +187,14 @@ Expression *ast_expr_int_new(Arena *arena, Token token, int64_t value) {
   int_lit->kind = EXPR_INT;
   int_lit->as.expr_int_literal.value = value;
   return int_lit;
+}
+
+Expression *ast_expr_bool_new(Arena *arena, Token token, bool value) {
+  Expression *bool_lit = arena_alloc(arena, sizeof(Expression), alignof(Expression));
+  bool_lit->token = token;
+  bool_lit->kind = EXPR_BOOLEAN;
+  bool_lit->as.expr_bool_literal.value = value;
+  return bool_lit;
 }
 
 Expression *ast_expr_float_new(Arena *arena, Token token, double value) {

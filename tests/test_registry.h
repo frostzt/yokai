@@ -16,6 +16,7 @@
   X(parser__simple_identifier_expression)                                                          \
   X(strbuf_through_check)                                                                          \
   X(parser__integer_literal_expression)                                                            \
+  X(parser__boolean_literal_expression)                                                            \
   X(parser__float_literal_expression)                                                              \
   X(parser__parsing_prefix_expression)                                                             \
   X(parser__parsing_infix_expression)                                                              \

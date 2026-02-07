@@ -8,7 +8,11 @@
 #ifndef YOKAI_AST_H
 #define YOKAI_AST_H
 
+#include <stdalign.h>
+#include <stdbool.h>
 #include <stddef.h>
+#include <stdio.h>
+#include <string.h>
 
 #include "yokai/arena.h"
 #include "yokai/str.h"
@@ -25,6 +29,7 @@ typedef enum {
   EXPR_IDENT,
   EXPR_INT,
   EXPR_FLOAT,
+  EXPR_BOOLEAN,
   EXPR_PREFIX,
   EXPR_INFIX,
 } ExpressionKind;
@@ -37,6 +42,7 @@ typedef struct Expression {
     struct { StrView value; } expr_ident;
     struct { int64_t value; } expr_int_literal;
     struct { double value; } expr_float_literal;
+    struct { bool value; } expr_bool_literal;
     struct { StrView op; struct Expression* right; } expr_prefix;
     struct { struct Expression* left; StrView op; struct Expression* right; } expr_infix;
   } as;
@@ -108,6 +114,9 @@ Expression *ast_expr_int_new(Arena *arena, Token token, int64_t value);
 
 /* Allocates a new FloatLiteral using the arena allocator */
 Expression *ast_expr_float_new(Arena *arena, Token token, double value);
+
+/* Allocates a new BoolLiteral using the arena allocator */
+Expression *ast_expr_bool_new(Arena *arena, Token token, bool value);
 
 /* Allocates a new Infix expression using the arena allocator */
 Expression *ast_expr_infix_new(Arena *arena, Token operator, Expression * left_expr,

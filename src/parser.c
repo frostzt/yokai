@@ -46,6 +46,8 @@ void parser_init(Parser *p, Lexer *l, Arena *arena) {
   register_prefix(p, TOK_FLOAT, parse_float_literal);
   register_prefix(p, TOK_BANG, parse_prefix_expression);
   register_prefix(p, TOK_MINUS, parse_prefix_expression);
+  register_prefix(p, TOK_TRUE, parse_boolean);
+  register_prefix(p, TOK_FALSE, parse_prefix_expression);
 
   /* init infix parsers */
   register_infix(p, TOK_PLUS, parse_infix_expression);
@@ -127,6 +129,10 @@ Expression *parse_integer_literal(Parser *p, Arena *arena) {
   /* use the parsed value and token to create a new integer literal */
   Expression *int_literal = ast_expr_int_new(arena, p->current_token, value);
   return int_literal;
+}
+
+Expression *parse_boolean(Parser *p, Arena *arena) {
+  return ast_expr_bool_new(arena, p->current_token, p__current_token_is(p, TOK_TRUE));
 }
 
 Expression *parse_identifier(Parser *p, Arena *arena) {

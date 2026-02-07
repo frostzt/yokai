@@ -186,6 +186,31 @@ TEST(parser__integer_literal_expression) {
   ASSERT(sv_eq_cstr(stmt->as.stmt_expr.expr->token.literal, "52"), "literal not 52");
 }
 
+TEST(parser__boolean_literal_expression) {
+  Arena arena = arena_create(128);
+
+  const char *input_raw = "true;";
+
+  /* setup parser */
+  StrView input = {.data = input_raw, .len = strlen(input_raw)};
+  Lexer lexer = {.input = input, .position = 0, .read_position = 0, .ch = 0};
+  read_char(&lexer);
+  Parser parser = {.lexer = &lexer};
+  parser_init(&parser, &lexer, &arena);
+  Program *program = parse_program(&parser, &arena);
+  check_parser_errors(&parser);
+
+  ASSERT_NOT_NULL(program, "parse_program returned NULL");
+  ASSERT_EQ(program->stmt_count, 1, "program statements does not contain 1 statement");
+
+  Statement *stmt = program->statements[0];
+  ASSERT_EQ(stmt->kind, STMT_EXPR, "statement is not an expression statement");
+
+  ASSERT_EQ(stmt->as.stmt_expr.expr->kind, EXPR_BOOLEAN,
+            "statement expression not an integer kind");
+  ASSERT_EQ(stmt->as.stmt_expr.expr->as.expr_bool_literal.value, true, "literal value not true");
+}
+
 TEST(parser__float_literal_expression) {
   Arena arena = arena_create(128);
 
