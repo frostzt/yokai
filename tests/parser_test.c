@@ -35,6 +35,12 @@ bool test_identifier_literal(Expression *expr, char *value) {
   return true;
 }
 
+bool test_boolean_literal(Expression *expr, bool value) {
+  ASSERT_EQ(expr->kind, EXPR_BOOLEAN, "expr is not a boolean literal expression");
+  ASSERT_EQ(expr->as.expr_bool_literal.value, value, "bool value mismatch");
+  return true;
+}
+
 bool test_literal_expression(Expression *expr, void *expected) {
   switch (expr->kind) {
   case EXPR_INT: {
@@ -43,6 +49,10 @@ bool test_literal_expression(Expression *expr, void *expected) {
   }
   case EXPR_IDENT: {
     return test_identifier_literal(expr, expected);
+  }
+  case EXPR_BOOLEAN: {
+    bool value = *(bool *)expected;
+    return test_boolean_literal(expr, value);
   }
   default: {
     DEBUG_ERROR("Type received is out of scope");
@@ -248,6 +258,8 @@ TEST(parser__parsing_prefix_expression) {
   struct PrefixTest tests[] = {
       {.input = "!5", .operator = "!", .integer_value = 5},
       {.input = "-15", .operator = "-", .integer_value = 15},
+      // {.input = "!true", .operator = "!", .integer_value = true},
+      // {.input = "!false", .operator = "!", .integer_value = false},
   };
 
   size_t length = sizeof(tests) / sizeof(tests[0]);
@@ -270,8 +282,8 @@ TEST(parser__parsing_prefix_expression) {
     Expression *stmt_expr = stmt->as.stmt_expr.expr;
     ASSERT_EQ(stmt_expr->kind, EXPR_PREFIX, "stmt expression not prefix expression");
     ASSERT(sv_eq_cstr(stmt_expr->as.expr_prefix.op, current_case.operator), "operator mismatch");
-    ASSERT(test_integer_literal(stmt_expr->as.expr_prefix.right, current_case.integer_value),
-           "invalid integer literal value");
+    ASSERT(test_literal_expression(stmt_expr->as.expr_prefix.right, &current_case.integer_value),
+           "invalid value received");
   }
 }
 
@@ -294,6 +306,9 @@ TEST(parser__parsing_infix_expression) {
       {.input = "5 < 5", .operator = "<", .left_value = 5, .right_value = 5},
       {.input = "5 == 5", .operator = "==", .left_value = 5, .right_value = 5},
       {.input = "5 != 5", .operator = "!=", .left_value = 5, .right_value = 5},
+      {.input = "true == true", .operator = "==", .left_value = true, .right_value = true},
+      {.input = "true != false", .operator = "!=", .left_value = true, .right_value = false},
+      {.input = "false == false", .operator = "==", .left_value = false, .right_value = false},
   };
 
   size_t length = sizeof(tests) / sizeof(tests[0]);
