@@ -47,7 +47,7 @@ void parser_init(Parser *p, Lexer *l, Arena *arena) {
   register_prefix(p, TOK_BANG, parse_prefix_expression);
   register_prefix(p, TOK_MINUS, parse_prefix_expression);
   register_prefix(p, TOK_TRUE, parse_boolean);
-  register_prefix(p, TOK_FALSE, parse_prefix_expression);
+  register_prefix(p, TOK_FALSE, parse_boolean);
 
   /* init infix parsers */
   register_infix(p, TOK_PLUS, parse_infix_expression);

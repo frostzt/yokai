@@ -89,9 +89,7 @@ void ast__expr_to_string(const Expression *expr, StrBuf *str_buf) {
     break;
   }
   case EXPR_BOOLEAN: {
-    sb__append_cstr(str_buf, "(");
     sb__append_cstr(str_buf, expr->as.expr_bool_literal.value ? "true" : "false");
-    sb__append_cstr(str_buf, ")");
     break;
   }
   }

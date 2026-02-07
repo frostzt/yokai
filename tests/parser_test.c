@@ -367,6 +367,22 @@ TEST(parser__parsing_complex_expressions) {
           .output = "((5 > 4) == (3 < 4))",
       },
       {
+          .input = "true",
+          .output = "true",
+      },
+      {
+          .input = "false",
+          .output = "false",
+      },
+      {
+          .input = "3 > 5 == false",
+          .output = "((3 > 5) == false)",
+      },
+      {
+          .input = "3 < 5 == true",
+          .output = "((3 < 5) == true)",
+      },
+      {
           .input = "5 < 4 != 3 > 4",
           .output = "((5 < 4) != (3 > 4))",
       },
