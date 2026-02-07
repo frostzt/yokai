@@ -145,4 +145,7 @@ Expression *parse_prefix_expression(Parser *p, Arena *arena);
 /* parses an infix expression */
 Expression *parse_infix_expression(Parser *p, Arena *arena, Expression *left);
 
+/* parses gropued expression */
+Expression *parse_grouped_expression(Parser *p, Arena *arena);
+
 #endif // YOKAI_PARSER_H

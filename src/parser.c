@@ -48,6 +48,7 @@ void parser_init(Parser *p, Lexer *l, Arena *arena) {
   register_prefix(p, TOK_MINUS, parse_prefix_expression);
   register_prefix(p, TOK_TRUE, parse_boolean);
   register_prefix(p, TOK_FALSE, parse_boolean);
+  register_prefix(p, TOK_LPAREN, parse_grouped_expression);
 
   /* init infix parsers */
   register_infix(p, TOK_PLUS, parse_infix_expression);
@@ -200,6 +201,13 @@ Expression *parse_expression(Parser *p, Arena *arena, Precedence precedence) {
   }
 
   return left_expression;
+}
+
+Expression *parse_grouped_expression(Parser *p, Arena *arena) {
+  p__next_token(p);
+  Expression *expr = parse_expression(p, arena, PREC_LOWEST);
+  if (!p__expect_peek(p, arena, TOK_RPAREN)) { return NULL; }
+  return expr;
 }
 
 Expression *parse_prefix_expression(Parser *p, Arena *arena) {

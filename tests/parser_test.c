@@ -409,6 +409,26 @@ TEST(parser__parsing_complex_expressions) {
           .input = "3 + 4 * 5 == 3 * 1 + 4 * 5",
           .output = "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
       },
+      {
+          .input = "1 + (2 + 3) + 4",
+          .output = "((1 + (2 + 3)) + 4)",
+      },
+      {
+          .input = "(5 + 5) * 2",
+          .output = "((5 + 5) * 2)",
+      },
+      {
+          .input = "2 / (5 + 5)",
+          .output = "(2 / (5 + 5))",
+      },
+      {
+          .input = "-(5 + 5)",
+          .output = "(-(5 + 5))",
+      },
+      {
+          .input = "!(true == true)",
+          .output = "(!(true == true))",
+      },
   };
 
   size_t length = sizeof(tests) / sizeof(tests[0]);
