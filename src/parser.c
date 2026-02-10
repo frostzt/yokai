@@ -145,7 +145,14 @@ Expression *parse_if_expression(Parser *p, Arena *arena) {
   if (!p__expect_peek(p, arena, TOK_LBRACE)) { return NULL; };
   /* parse the consequence block */
   Statement *consequence = parse_block_statement(p, arena);
-  Expression *if_expr = ast_expr_if_new(arena, current_token, condition, consequence, NULL);
+  Statement *alternative = NULL;
+  /* check and parse alternative if present */
+  if (p__peek_token_is(p, TOK_ELSE)) {
+    p__next_token(p);
+    if (!p__expect_peek(p, arena, TOK_LBRACE)) { return NULL; }
+    alternative = parse_block_statement(p, arena);
+  }
+  Expression *if_expr = ast_expr_if_new(arena, current_token, condition, consequence, alternative);
   return if_expr;
 }
 
