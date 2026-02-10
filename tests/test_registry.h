@@ -20,6 +20,8 @@
   X(parser__float_literal_expression)                                                              \
   X(parser__parsing_prefix_expression)                                                             \
   X(parser__parsing_infix_expression)                                                              \
-  X(parser__parsing_complex_expressions)
+  X(parser__parsing_complex_expressions)                                                           \
+  X(parser__parses_if_statements)                                                                  \
+  X(parser__parses_if_else_statements)
 
 #endif // YOKAI_TEST_REGISTRY_H

@@ -23,18 +23,30 @@ typedef enum {
   STMT_LET,
   STMT_RETURN,
   STMT_EXPR,
+  STMT_BLOCK,
 } StatementKind;
 
 typedef enum {
+  /* definitions */
   EXPR_IDENT,
+
+  /* operators */
+  EXPR_PREFIX,
+  EXPR_INFIX,
+
+  /* primitives */
   EXPR_INT,
   EXPR_FLOAT,
   EXPR_BOOLEAN,
-  EXPR_PREFIX,
-  EXPR_INFIX,
+
+  /* conditional */
+  EXPR_IF,
 } ExpressionKind;
 
-typedef struct Expression {
+typedef struct Statement Statement;
+typedef struct Expression Expression;
+
+struct Expression {
   ExpressionKind kind;
   Token token;
   /* clang-format off */
@@ -45,11 +57,12 @@ typedef struct Expression {
     struct { bool value; } expr_bool_literal;
     struct { StrView op; struct Expression* right; } expr_prefix;
     struct { struct Expression* left; StrView op; struct Expression* right; } expr_infix;
+    struct { struct Expression* condition; struct Statement* consequence; struct Statement* alternative; } expr_if;
   } as;
   /* clang-format on */
-} Expression;
+};
 
-typedef struct Statement {
+struct Statement {
   StatementKind kind;
   Token token;
   union {
@@ -57,9 +70,10 @@ typedef struct Statement {
     struct { Expression* name; Expression* value; } stmt_let;
     struct { Expression* return_value; } stmt_return;
     struct { Expression* expr; } stmt_expr;
+    struct { struct Statement** stmts; size_t statement_count; size_t statement_capacity; } stmt_block;
     /* clang-format on */
   } as;
-} Statement;
+};
 
 typedef struct Program {
   Statement **statements;
@@ -79,6 +93,9 @@ Statement *ast_expr_let_new(Arena *arena, Token token, Expression *name, Express
 
 /* Allocates a new LetStatement using the arena allocator */
 Statement *ast_expr_return_new(Arena *arena, Token token, Expression *value);
+
+/* Allocates a new BlockStatement using the arena allocator */
+Statement *ast_expr_block_new(Arena *arena, Token token, size_t initial_capacity);
 
 /*----------------------------------------------------------------
  *  AST to String
@@ -117,6 +134,10 @@ Expression *ast_expr_float_new(Arena *arena, Token token, double value);
 
 /* Allocates a new BoolLiteral using the arena allocator */
 Expression *ast_expr_bool_new(Arena *arena, Token token, bool value);
+
+/* Allocates a new If expression using the arena allocator */
+Expression *ast_expr_if_new(Arena *arena, Token token, Expression *condition,
+                            Statement *consequence, Statement *alternative);
 
 /* Allocates a new Infix expression using the arena allocator */
 Expression *ast_expr_infix_new(Arena *arena, Token operator, Expression * left_expr,

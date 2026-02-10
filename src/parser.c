@@ -5,6 +5,7 @@
  * Date: 2026-01-05
  */
 
+#include <assert.h>
 #include <errno.h>
 #include <stdalign.h>
 #include <stdio.h>
@@ -49,6 +50,7 @@ void parser_init(Parser *p, Lexer *l, Arena *arena) {
   register_prefix(p, TOK_TRUE, parse_boolean);
   register_prefix(p, TOK_FALSE, parse_boolean);
   register_prefix(p, TOK_LPAREN, parse_grouped_expression);
+  register_prefix(p, TOK_IF, parse_if_expression);
 
   /* init infix parsers */
   register_infix(p, TOK_PLUS, parse_infix_expression);
@@ -130,6 +132,57 @@ Expression *parse_integer_literal(Parser *p, Arena *arena) {
   /* use the parsed value and token to create a new integer literal */
   Expression *int_literal = ast_expr_int_new(arena, p->current_token, value);
   return int_literal;
+}
+
+Expression *parse_if_expression(Parser *p, Arena *arena) {
+  Token current_token = p->current_token;
+  if (!p__expect_peek(p, arena, TOK_LPAREN)) { return NULL; }
+  p__next_token(p);
+  /* parse the condition */
+  Expression *condition = parse_expression(p, arena, PREC_LOWEST);
+  /* skip till the start of the block */
+  if (!p__expect_peek(p, arena, TOK_RPAREN)) { return NULL; };
+  if (!p__expect_peek(p, arena, TOK_LBRACE)) { return NULL; };
+  /* parse the consequence block */
+  Statement *consequence = parse_block_statement(p, arena);
+  Expression *if_expr = ast_expr_if_new(arena, current_token, condition, consequence, NULL);
+  return if_expr;
+}
+
+Statement *parse_block_statement(Parser *p, Arena *arena) {
+  Statement *block_stmt = ast_expr_block_new(arena, p->current_token, 4);
+  size_t curr_stmt = 0;
+
+  p__next_token(p);
+
+  /* while the current token is NOT '}' or EOF keep moving */
+  while (!p__current_token_is(p, TOK_RBRACE) && !p__current_token_is(p, TOK_EOF)) {
+    Statement *stmt = parse_statement(p, arena);
+    if (stmt != NULL) {
+      /* if we're potentially overflowing realloc */
+      if (curr_stmt == (block_stmt->as.stmt_block.statement_capacity - 1)) {
+        size_t current_capacity = block_stmt->as.stmt_block.statement_capacity;
+        assert(current_capacity > 0);
+        size_t new_cap = (current_capacity == 0) ? 4 : current_capacity * 2;
+        Statement **new_arr =
+            arena_alloc(arena, sizeof(Statement *) * new_cap, alignof(Statement *));
+        /* copy over the data
+         * NOTE: doing this without a check because there is no way statement count will be less
+         * than 0 */
+        memcpy(new_arr, block_stmt->as.stmt_block.stmts,
+               sizeof(Statement *) * block_stmt->as.stmt_block.statement_count);
+        block_stmt->as.stmt_block.stmts = new_arr;
+        block_stmt->as.stmt_block.statement_capacity = new_cap;
+      }
+      block_stmt->as.stmt_block.stmts[curr_stmt] = stmt;
+      /* update the current statement count */
+      curr_stmt++;
+    }
+    p__next_token(p);
+  }
+
+  block_stmt->as.stmt_block.statement_count = curr_stmt;
+  return block_stmt;
 }
 
 Expression *parse_boolean(Parser *p, Arena *arena) {

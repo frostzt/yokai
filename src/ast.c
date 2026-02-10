@@ -12,6 +12,7 @@ const char *stmt_token_literal(const Statement *s) {
   case STMT_RETURN:
   case STMT_EXPR:
   case STMT_LET:
+  case STMT_BLOCK:
     return s->token.literal.data;
   }
 
@@ -35,7 +36,6 @@ void ast__stmt_to_string(const Statement *stmt, StrBuf *str_buf) {
     sb__append_cstr(str_buf, ";");
     break;
   };
-
   case STMT_RETURN: {
     sb__append_strview(str_buf, stmt->token.literal); // return
     sb__append_cstr(str_buf, " ");
@@ -45,7 +45,13 @@ void ast__stmt_to_string(const Statement *stmt, StrBuf *str_buf) {
     sb__append_cstr(str_buf, ";");
     break;
   };
-
+  case STMT_BLOCK: {
+    for (size_t i = 0; i < stmt->as.stmt_block.statement_count; i++) {
+      Statement *s = stmt->as.stmt_block.stmts[i];
+      ast__stmt_to_string(s, str_buf);
+    }
+    break;
+  }
   case STMT_EXPR: {
     if (stmt->as.stmt_expr.expr) { ast__expr_to_string(stmt->as.stmt_expr.expr, str_buf); }
     break;
@@ -86,6 +92,17 @@ void ast__expr_to_string(const Expression *expr, StrBuf *str_buf) {
     sb__append_cstr(str_buf, " ");
     ast__expr_to_string(expr->as.expr_infix.right, str_buf);
     sb__append_cstr(str_buf, ")");
+    break;
+  }
+  case EXPR_IF: {
+    sb__append_cstr(str_buf, "if");
+    ast__expr_to_string(expr->as.expr_if.condition, str_buf);
+    sb__append_cstr(str_buf, " ");
+    ast__stmt_to_string(expr->as.expr_if.consequence, str_buf);
+    if (expr->as.expr_if.alternative != NULL) {
+      sb__append_cstr(str_buf, "else");
+      ast__stmt_to_string(expr->as.expr_if.alternative, str_buf);
+    }
     break;
   }
   case EXPR_BOOLEAN: {
@@ -151,6 +168,19 @@ Statement *ast_expr_stmt_new(Arena *arena, Token token, Expression *value) {
   return expr_stmt;
 }
 
+Statement *ast_expr_block_new(Arena *arena, Token token, size_t initial_capacity) {
+  Statement *expr_stmt = arena_alloc(arena, sizeof(Statement), alignof(Statement));
+  expr_stmt->kind = STMT_BLOCK;
+  expr_stmt->token = token;
+  expr_stmt->as.stmt_block.statement_count = 0;
+  expr_stmt->as.stmt_block.statement_capacity = initial_capacity;
+  expr_stmt->as.stmt_block.stmts =
+      arena_alloc(arena, sizeof(Statement *) * initial_capacity, alignof(Statement *));
+
+  memset(expr_stmt->as.stmt_block.stmts, 0, sizeof(Statement *) * initial_capacity);
+  return expr_stmt;
+}
+
 Expression *ast_expr_prefix_new(Arena *arena, Token operator, Expression *expr) {
   Expression *prefix_expr = arena_alloc(arena, sizeof(Expression), alignof(Expression));
   prefix_expr->token = operator; /* operator */
@@ -201,4 +231,15 @@ Expression *ast_expr_float_new(Arena *arena, Token token, double value) {
   float_lit->kind = EXPR_FLOAT;
   float_lit->as.expr_float_literal.value = value;
   return float_lit;
+}
+
+Expression *ast_expr_if_new(Arena *arena, Token token, Expression *condition,
+                            Statement *consequence, Statement *alternative) {
+  Expression *if_expr = arena_alloc(arena, sizeof(Expression), alignof(Expression));
+  if_expr->token = token;
+  if_expr->kind = EXPR_IF;
+  if_expr->as.expr_if.condition = condition;
+  if_expr->as.expr_if.consequence = consequence;
+  if_expr->as.expr_if.alternative = alternative;
+  return if_expr;
 }

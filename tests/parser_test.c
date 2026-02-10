@@ -17,7 +17,6 @@ typedef struct ParserTestStruct {
 bool test_let_statement(Statement *stmt, char *name) {
   ASSERT_EQ(stmt->kind, STMT_LET, "token is not of STMT_LET kind");
   ASSERT(strncmp(stmt_token_literal(stmt), "let", 3) == 0, "stmt not let");
-
   ASSERT(strcmp(stmt->as.stmt_let.name->as.expr_ident.value.data, name),
          "expected name does not match");
   return true;
@@ -455,4 +454,57 @@ TEST(parser__parsing_complex_expressions) {
     const char *actual = sb__cstr(&strbuf);
     ASSERT(strcmp(current_case.output, actual) == 0, "program string mismatch");
   }
+}
+
+TEST(parser__parses_if_statements) {
+  Arena arena = arena_create(128);
+  const char *input_raw = "if (x < y) { x }";
+
+  /* setup parser */
+  StrView input = {.data = input_raw, .len = strlen(input_raw)};
+  Lexer lexer = {.input = input, .position = 0, .read_position = 0, .ch = 0};
+  read_char(&lexer);
+  Parser parser = {.lexer = &lexer};
+  parser_init(&parser, &lexer, &arena);
+  Program *program = parse_program(&parser, &arena);
+  check_parser_errors(&parser);
+
+  ASSERT_NOT_NULL(program, "parse_program returned NULL");
+  ASSERT_EQ(program->stmt_count, 1, "program statements does not contain 1 statement");
+
+  Statement *stmt = program->statements[0];
+  ASSERT_EQ(stmt->kind, STMT_EXPR, "statement is not an expression statement");
+  ASSERT_EQ(stmt->as.stmt_expr.expr->kind, EXPR_IF, "statement expression not an if kind");
+
+  Expression *if_expr = stmt->as.stmt_expr.expr;
+  ASSERT(test_infix_expression(if_expr->as.expr_if.condition, "x", "<", "y"),
+         "failed to test infix expression");
+  Statement *consequence_stmt = if_expr->as.expr_if.consequence;
+  ASSERT_EQ(consequence_stmt->as.stmt_block.statement_count, 1, "consequence is not 1 statement");
+  ASSERT(if_expr->as.expr_if.alternative == NULL, "alternative is NOT null");
+
+  Statement *consequence = consequence_stmt->as.stmt_block.stmts[0];
+  ASSERT(test_identifier_literal(consequence->as.stmt_expr.expr, "x"), "invalid expression value");
+}
+
+TEST(parser__parses_if_else_statements) {
+  Arena arena = arena_create(128);
+  const char *input_raw = "if (x < y) { x } else { y }";
+
+  /* setup parser */
+  StrView input = {.data = input_raw, .len = strlen(input_raw)};
+  Lexer lexer = {.input = input, .position = 0, .read_position = 0, .ch = 0};
+  read_char(&lexer);
+  Parser parser = {.lexer = &lexer};
+  parser_init(&parser, &lexer, &arena);
+  Program *program = parse_program(&parser, &arena);
+  check_parser_errors(&parser);
+
+  ASSERT_NOT_NULL(program, "parse_program returned NULL");
+  ASSERT_EQ(program->stmt_count, 1, "program statements does not contain 1 statement");
+
+  Statement *stmt = program->statements[0];
+  ASSERT_EQ(stmt->kind, STMT_EXPR, "statement is not an expression statement");
+
+  ASSERT_EQ(stmt->as.stmt_expr.expr->kind, EXPR_IF, "statement expression not an if kind");
 }

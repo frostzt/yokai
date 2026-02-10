@@ -120,6 +120,9 @@ Program *parse_program(Parser *p, Arena *arena);
 /* parses an identifier expression */
 Expression *parse_identifier(Parser *p, Arena *arena);
 
+/* parses an if expression */
+Expression *parse_if_expression(Parser *p, Arena *arena);
+
 /* parses an integer literal */
 Expression *parse_integer_literal(Parser *p, Arena *arena);
 
@@ -135,6 +138,9 @@ Expression *parse_boolean(Parser *p, Arena *arena);
 
 /* parses an expression statement */
 Statement *parse_expression_statement(Parser *p, Arena *arena);
+
+/* parses a block statement */
+Statement *parse_block_statement(Parser *p, Arena *arena);
 
 /* parses an expression */
 Expression *parse_expression(Parser *p, Arena *arena, Precedence precedence);
