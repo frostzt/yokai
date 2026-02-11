@@ -507,4 +507,18 @@ TEST(parser__parses_if_else_statements) {
   ASSERT_EQ(stmt->kind, STMT_EXPR, "statement is not an expression statement");
 
   ASSERT_EQ(stmt->as.stmt_expr.expr->kind, EXPR_IF, "statement expression not an if kind");
+
+  Expression *if_expr = stmt->as.stmt_expr.expr;
+  ASSERT(test_infix_expression(if_expr->as.expr_if.condition, "x", "<", "y"),
+         "failed to test infix expression");
+
+  Statement *consequence_stmt = if_expr->as.expr_if.consequence;
+  ASSERT_EQ(consequence_stmt->as.stmt_block.statement_count, 1, "consequence is not 1 statement");
+  Statement *consequence = consequence_stmt->as.stmt_block.stmts[0];
+  ASSERT(test_identifier_literal(consequence->as.stmt_expr.expr, "x"), "invalid expression value");
+
+  Statement *alternative_stmt = if_expr->as.expr_if.alternative;
+  ASSERT_EQ(alternative_stmt->as.stmt_block.statement_count, 1, "alternative is not 1 statement");
+  Statement *alternative = alternative_stmt->as.stmt_block.stmts[0];
+  ASSERT(test_identifier_literal(alternative->as.stmt_expr.expr, "y"), "invalid expression value");
 }
